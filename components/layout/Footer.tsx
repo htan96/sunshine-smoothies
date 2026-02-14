@@ -1,60 +1,39 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Home, Menu as MenuIcon, MapPin, ShoppingBag, Users } from "lucide-react"
+import { Home, Menu, MapPin, ShoppingBag, Users } from "lucide-react"
 
 export default function Footer() {
-  const pathname = usePathname()
-
-  const navItems = [
-    { name: "Menu", href: "/menu", icon: MenuIcon },
-    { name: "Location", href: "/location", icon: MapPin },
-    { name: "Order", href: "/order", icon: ShoppingBag },
-    { name: "Community", href: "/community", icon: Users },
-    { name: "About", href: "/about", icon: Home },
-  ]
-
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-lg md:hidden z-50">
-      <div className="flex justify-between items-center max-w-lg mx-auto px-4 py-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href
-          const Icon = item.icon
+    <footer className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg md:hidden z-50">
+      <div className="flex justify-around items-center h-16 text-sm">
 
-          const isOrder = item.name === "Order"
+        <Link href="/" className="flex flex-col items-center text-gray-700 hover:text-yellow-500">
+          <Home size={22} />
+          <span className="text-xs mt-1">Home</span>
+        </Link>
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="flex flex-col items-center justify-center text-xs"
-            >
-              <div
-                className={`
-                  flex items-center justify-center
-                  ${isOrder ? "bg-yellow-400 text-black w-12 h-12 rounded-full -mt-6 shadow-md" : ""}
-                  ${!isOrder && isActive ? "text-yellow-500" : "text-gray-600"}
-                `}
-              >
-                <Icon size={isOrder ? 22 : 20} />
-              </div>
+        <Link href="/menu" className="flex flex-col items-center text-gray-700 hover:text-yellow-500">
+          <Menu size={22} />
+          <span className="text-xs mt-1">Menu</span>
+        </Link>
 
-              {!isOrder && (
-                <span className={`${isActive ? "text-yellow-500 font-medium" : "text-gray-500"}`}>
-                  {item.name}
-                </span>
-              )}
+        <Link href="/location" className="flex flex-col items-center text-gray-700 hover:text-yellow-500">
+          <MapPin size={22} />
+          <span className="text-xs mt-1">Find Us</span>
+        </Link>
 
-              {isOrder && (
-                <span className="text-gray-700 font-medium mt-1">
-                  Order
-                </span>
-              )}
-            </Link>
-          )
-        })}
+        <Link href="/community" className="flex flex-col items-center text-gray-700 hover:text-yellow-500">
+          <Users size={22} />
+          <span className="text-xs mt-1">Community</span>
+        </Link>
+
+        <Link href="/order" className="flex flex-col items-center text-gray-700 hover:text-yellow-500">
+          <ShoppingBag size={22} />
+          <span className="text-xs mt-1">Order</span>
+        </Link>
+
       </div>
-    </div>
+    </footer>
   )
 }
