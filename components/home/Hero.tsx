@@ -27,7 +27,7 @@ export default function Hero() {
           <div className="mt-8 flex justify-center gap-6 flex-wrap">
 
   <a
-    href="/contact"
+    href="/location"
     className="rounded-full bg-yellow-400 px-8 py-3 font-semibold text-black hover:bg-yellow-500 transition"
   >
     View Locations
