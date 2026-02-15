@@ -1,7 +1,20 @@
+"use client"
+
 import Image from "next/image"
 import SocialSection from "@/components/home/SocialSection"
 
 export default function LocationPage() {
+
+  const openMaps = (address: string) => {
+    const encoded = encodeURIComponent(address)
+
+    if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.open(`https://maps.apple.com/?q=${encoded}`, "_blank")
+    } else {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, "_blank")
+    }
+  }
+
   return (
     <main className="bg-white">
 
@@ -33,27 +46,24 @@ export default function LocationPage() {
             <h2 className="text-4xl font-bold">
               Solano Avenue Storefront
             </h2>
+
             <p className="mt-3 text-lg">
               2089 Solano Ave, Vallejo, CA
             </p>
-            <p className="text-lg">
-              Open Daily 
-            </p>
-            <p className="text-lg">
-            Monday - Friday 9AM – 5PM 
-            </p>
-            <p className="text-lg">
-            Saturday - Sunday 9AM - 7PM
-            </p>
 
-            <div className="mt-6 flex gap-4">
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=2089+Solano+Ave+Vallejo+CA"
-                target="_blank"
+            <p className="text-lg">Open Daily</p>
+            <p className="text-lg">Monday - Friday 9AM – 5PM</p>
+            <p className="text-lg">Saturday - Sunday 9AM - 7PM</p>
+
+            <div className="mt-6 flex gap-4 flex-wrap">
+              <button
+                onClick={() =>
+                  openMaps("2089 Solano Ave, Vallejo, CA")
+                }
                 className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
               >
                 Get Directions
-              </a>
+              </button>
 
               <a
                 href="/order"
@@ -83,26 +93,24 @@ export default function LocationPage() {
             <h2 className="text-4xl font-bold">
               Waterfront Drive-Thru
             </h2>
+
             <p className="mt-3 text-lg">
               821 Wilson Ave, Vallejo, CA
             </p>
-            <p className="text-lg">
-              Open Daily 
-            </p>
-            <p className="text-lg">
-            Monday - Friday 7AM – 5PM
-            </p>
-            <p className="text-lg">
-            Saturday - Sunday 8AM - 5PM
-            </p>
-            <div className="mt-6 flex gap-4">
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=821+Wilson+Ave+Vallejo+CA"
-                target="_blank"
+
+            <p className="text-lg">Open Daily</p>
+            <p className="text-lg">Monday - Friday 7AM – 5PM</p>
+            <p className="text-lg">Saturday - Sunday 8AM - 5PM</p>
+
+            <div className="mt-6 flex gap-4 flex-wrap">
+              <button
+                onClick={() =>
+                  openMaps("821 Wilson Ave, Vallejo, CA")
+                }
                 className="bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
               >
                 Get Directions
-              </a>
+              </button>
 
               <a
                 href="/order"
