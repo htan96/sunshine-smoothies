@@ -16,31 +16,17 @@ export default function Header() {
           : "relative bg-white shadow-sm"
       }`}
     >
-      <div className="w-full px-6 md:px-10 py-4 md:py-6 flex items-center justify-between">
+      <div className="w-full px-6 md:px-10 py-3 md:py-6 flex items-center justify-center md:justify-between">
 
-        {/* Mobile Centered Logo */}
-        <div className="flex-1 flex justify-center md:hidden">
-          <Link href="/">
-            <Image
-              src="/logo.png"
-              alt="Sunshine Smoothies"
-              width={140}
-              height={50}
-              priority
-              className="object-contain"
-            />
-          </Link>
-        </div>
-
-        {/* Desktop Logo (left) */}
-        <Link href="/" className="hidden md:flex items-center">
+        {/* Logo */}
+        <Link href="/" className="flex items-center">
           <Image
             src="/logo.png"
             alt="Sunshine Smoothies"
-            width={170}
-            height={60}
+            width={140}
+            height={50}
             priority
-            className="object-contain"
+            className="object-contain md:w-[170px]"
           />
         </Link>
 
@@ -70,7 +56,6 @@ export default function Header() {
             Order Online
           </Link>
         </nav>
-
       </div>
     </header>
   );
