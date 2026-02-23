@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-white text-neutral-900 antialiased">
         
-        {selectedLocation && <Header />}
+        <Header />
 
         <main>{children}</main>
 

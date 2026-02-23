@@ -2,8 +2,12 @@
 
 import Image from "next/image"
 import SocialSection from "@/components/home/SocialSection"
+import { useRouter } from "next/navigation"
+import { useLocationStore } from "@/features/location/store"
 
 export default function LocationPage() {
+  const router = useRouter()
+  const { setLocation } = useLocationStore()
 
   const openMaps = (address: string) => {
     const encoded = encodeURIComponent(address)
@@ -13,6 +17,15 @@ export default function LocationPage() {
     } else {
       window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, "_blank")
     }
+  }
+
+  const handleOrder = (location: {
+    id: string
+    name: string
+    address: string
+  }) => {
+    setLocation(location)
+    router.push("/order")
   }
 
   return (
@@ -31,7 +44,7 @@ export default function LocationPage() {
         </div>
       </section>
 
-      {/* ===== SOLANO STOREFRONT ===== */}
+      {/* ===== SOLANO ===== */}
       <section className="relative w-full h-[550px]">
         <Image
           src="/solano.png"
@@ -64,12 +77,18 @@ export default function LocationPage() {
                 Get Directions
               </button>
 
-              <a
-                href="/order"
+              <button
+                onClick={() =>
+                  handleOrder({
+                    id: "L6W05ZHRQZB3H",
+                    name: "Solano Ave",
+                    address: "2089 Solano Ave, Vallejo",
+                  })
+                }
                 className="bg-yellow-400 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-500 transition"
               >
                 Order Now
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -111,23 +130,25 @@ export default function LocationPage() {
                 Get Directions
               </button>
 
-              <a
-                href="/order"
+              <button
+                onClick={() =>
+                  handleOrder({
+                    id: "5PHZ3HJ8ZJCQ0",
+                    name: "Wilson Ave (Drive-Thru)",
+                    address: "821 Wilson Ave, Vallejo",
+                  })
+                }
                 className="bg-yellow-400 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-500 transition"
               >
                 Order Now
-              </a>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== SPACING BEFORE FOOTER ===== */}
       <div className="h-20 bg-white" />
-
-      {/* ===== SOCIAL SECTION ===== */}
       <SocialSection />
-
     </main>
   )
 }
