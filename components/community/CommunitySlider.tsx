@@ -8,6 +8,7 @@ const images = [
   "/community3.jpeg",
   "/community4.jpeg",
   "/community5.jpeg",
+  "/community6.jpeg",
 ];
 
 export default function CommunitySlider() {
