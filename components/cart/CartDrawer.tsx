@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { useCartStore } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 
@@ -60,11 +60,6 @@ export default function CartDrawer() {
   }, [pickupDate, asap]);
 
   async function handleCheckout() {
-    if (!selectedLocation?.id) {
-      alert("Please select a location first.");
-      return;
-    }
-
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -74,7 +69,9 @@ export default function CartDrawer() {
           ? `ASAP (${formattedReadyTime})`
           : pickupDate.toISOString(),
         notes,
-        locationId: selectedLocation.id, // ✅ CRITICAL FIX
+        locationId: selectedLocation?.id,
+        locationName: selectedLocation?.name,
+        locationAddress: selectedLocation?.address,
       }),
     });
 
@@ -82,8 +79,6 @@ export default function CartDrawer() {
 
     if (data.url) {
       window.location.href = data.url;
-    } else {
-      alert("Checkout failed.");
     }
   }
 
@@ -92,89 +87,113 @@ export default function CartDrawer() {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
 
+      {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={closeCart}
       />
 
-      <div className="relative w-[440px] bg-white h-full shadow-2xl flex flex-col">
+      {/* Drawer */}
+      <div className="relative w-full md:w-[440px] bg-white h-full shadow-2xl flex flex-col animate-slideIn">
 
         {/* Header */}
-        <div className="px-8 py-6 border-b border-neutral-100">
-          <h2 className="text-xl font-semibold tracking-tight">
-            Your Order
-          </h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
-
-          {/* Pickup Section */}
-          <div className="space-y-6">
-
-            <div>
-              <p className="text-xs uppercase tracking-widest text-neutral-400 mb-2">
-                Pickup Location
-              </p>
-              <div className="bg-neutral-100 rounded-2xl px-5 py-4 shadow-inner">
-                <p className="text-sm font-medium text-neutral-800">
-                  {selectedLocation?.name}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between bg-neutral-100 rounded-2xl px-5 py-4">
-              <span className="text-sm font-medium">
-                ASAP (Ready by {formattedReadyTime})
-              </span>
-              <button
-                onClick={() => setAsap(!asap)}
-                className={`w-12 h-6 flex items-center rounded-full transition ${
-                  asap ? "bg-black" : "bg-neutral-300"
-                }`}
-              >
-                <span
-                  className={`w-5 h-5 bg-white rounded-full shadow-md transform transition ${
-                    asap ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div>
-
-            {!asap && (
-              <div className="grid grid-cols-4 gap-2">
-                {timeSlots.map((slot, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setPickupDate(slot)}
-                    className="bg-neutral-100 rounded-xl py-2 text-xs hover:bg-neutral-200 transition"
-                  >
-                    {slot.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-neutral-100 rounded-2xl px-5 py-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neutral-300 transition"
-              placeholder="Special instructions..."
-            />
-
+        <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
+          
+          {/* Drag indicator (mobile only) */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 md:hidden">
+            <div className="w-12 h-1.5 bg-neutral-300 rounded-full" />
           </div>
 
-          {/* Items */}
-          <div className="border-t pt-8 space-y-6">
+          <h2 className="text-lg font-semibold tracking-tight">
+            Your Order
+          </h2>
 
+          <button
+            onClick={closeCart}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              stroke="currentColor"
+              strokeWidth="2"
+              fill="none"
+            >
+              <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
+
+          {/* Location */}
+          <div>
+            <p className="text-xs uppercase tracking-widest text-neutral-400 mb-2">
+              Pickup Location
+            </p>
+            <div className="bg-neutral-100 rounded-2xl px-5 py-4">
+              <p className="text-sm font-medium text-neutral-800">
+                {selectedLocation?.name}
+              </p>
+              <p className="text-xs text-neutral-500 mt-1">
+                {selectedLocation?.address}
+              </p>
+            </div>
+          </div>
+
+          {/* ASAP Toggle */}
+          <div className="flex items-center justify-between bg-neutral-100 rounded-2xl px-5 py-4">
+            <span className="text-sm font-medium">
+              ASAP (Ready by {formattedReadyTime})
+            </span>
+            <button
+              onClick={() => setAsap(!asap)}
+              className={`w-12 h-6 flex items-center rounded-full transition ${
+                asap ? "bg-black" : "bg-neutral-300"
+              }`}
+            >
+              <span
+                className={`w-5 h-5 bg-white rounded-full shadow-md transform transition ${
+                  asap ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {!asap && (
+            <div className="grid grid-cols-4 gap-2">
+              {timeSlots.map((slot, index) => (
+                <button
+                  key={index}
+                  onClick={() => setPickupDate(slot)}
+                  className="bg-neutral-100 rounded-xl py-2 text-xs hover:bg-neutral-200 transition"
+                >
+                  {slot.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Notes */}
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full bg-neutral-100 rounded-2xl px-5 py-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-neutral-300 transition"
+            placeholder="Special instructions..."
+          />
+
+          {/* Items */}
+          <div className="border-t pt-6 space-y-6">
             {items.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl p-5 shadow-sm border border-neutral-100 space-y-4"
+                className="bg-white rounded-2xl p-4 shadow-sm border border-neutral-100"
               >
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start mb-3">
                   <div>
                     <p className="font-medium">
                       {item.itemName}
@@ -196,10 +215,7 @@ export default function CartDrawer() {
                   <div className="flex items-center bg-neutral-100 rounded-full">
                     <button
                       onClick={() =>
-                        updateQuantity(
-                          item.id,
-                          item.quantity - 1
-                        )
+                        updateQuantity(item.id, item.quantity - 1)
                       }
                       className="px-4 py-1 text-sm"
                     >
@@ -212,10 +228,7 @@ export default function CartDrawer() {
 
                     <button
                       onClick={() =>
-                        updateQuantity(
-                          item.id,
-                          item.quantity + 1
-                        )
+                        updateQuantity(item.id, item.quantity + 1)
                       }
                       className="px-4 py-1 text-sm"
                     >
@@ -239,16 +252,16 @@ export default function CartDrawer() {
                 </div>
               </div>
             ))}
-
           </div>
-
         </div>
 
         {/* Footer */}
-        <div className="border-t border-neutral-100 px-8 py-6 bg-white space-y-4">
+        <div className="border-t border-neutral-100 px-6 py-5 bg-white space-y-4">
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
-            <span>${(getCartTotal() / 100).toFixed(2)}</span>
+            <span>
+              ${(getCartTotal() / 100).toFixed(2)}
+            </span>
           </div>
 
           <button
