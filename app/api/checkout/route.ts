@@ -9,7 +9,15 @@ const squareClient = new SquareClient({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const items = body?.items;
+
+    const {
+      items,
+      pickupTime,
+      notes,
+      locationId,
+      locationName,
+      locationAddress,
+    } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -18,10 +26,10 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!process.env.SQUARE_LOCATION_ID) {
+    if (!locationId) {
       return NextResponse.json(
-        { error: "Location ID not configured" },
-        { status: 500 }
+        { error: "Missing location ID" },
+        { status: 400 }
       );
     }
 
@@ -38,24 +46,23 @@ export async function POST(req: Request) {
       await squareClient.checkout.paymentLinks.create({
         idempotencyKey: randomUUID(),
         order: {
-          locationId: process.env.SQUARE_LOCATION_ID,
+          locationId: locationId, // 🔥 NOW DYNAMIC
           lineItems,
+          metadata: {
+            pickupTime: pickupTime || "Not provided",
+            notes: notes || "",
+            pickupLocation: locationName || "",
+            pickupAddress: locationAddress || "",
+          },
         },
         checkoutOptions: {
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/order-success`,
+          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
         },
       });
 
-    const checkoutUrl = response.paymentLink?.url;
-
-    if (!checkoutUrl) {
-      return NextResponse.json(
-        { error: "Failed to create checkout link" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ url: checkoutUrl });
+    return NextResponse.json({
+      url: response.paymentLink?.url,
+    });
 
   } catch (error) {
     console.error("Checkout error:", error);

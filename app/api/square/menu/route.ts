@@ -4,6 +4,15 @@ import { transformCatalog } from "@/features/menu/transform";
 
 export async function GET() {
   try {
+    const locationId = process.env.SQUARE_LOCATION_ID;
+
+    if (!locationId) {
+      return NextResponse.json(
+        { error: "Missing location ID" },
+        { status: 500 }
+      );
+    }
+
     // 1️⃣ Fetch raw Square catalog objects
     const catalogObjects = await fetchCatalogItems();
 
@@ -12,7 +21,10 @@ export async function GET() {
     }
 
     // 2️⃣ Transform into frontend-friendly structure
-    const menuItems = transformCatalog(catalogObjects);
+    const menuItems = transformCatalog(
+      catalogObjects,
+      locationId
+    );
 
     return NextResponse.json(menuItems, { status: 200 });
 
