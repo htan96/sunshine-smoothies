@@ -62,10 +62,6 @@ export async function POST(req: Request) {
       order: {
         locationId,
         lineItems,
-
-        // Order-level note
-        note: notes || "",
-
         // Scheduled pickup
         fulfillments,
       },
