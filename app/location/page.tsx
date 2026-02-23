@@ -25,7 +25,7 @@ export default function LocationPage() {
     address: string
   }) => {
     setLocation(location)
-    router.push("/order")
+    router.push("/menu") // ✅ Correct route
   }
 
   return (
@@ -44,7 +44,7 @@ export default function LocationPage() {
         </div>
       </section>
 
-      {/* ===== SOLANO ===== */}
+      {/* ===== SOLANO STOREFRONT ===== */}
       <section className="relative w-full h-[550px]">
         <Image
           src="/solano.png"
@@ -94,10 +94,9 @@ export default function LocationPage() {
         </div>
       </section>
 
-      {/* ===== SPACING ===== */}
       <div className="h-8 bg-white" />
 
-      {/* ===== WATERFRONT ===== */}
+      {/* ===== WATERFRONT DRIVE-THRU ===== */}
       <section className="relative w-full h-[550px]">
         <Image
           src="/waterfront.png"
@@ -148,7 +147,9 @@ export default function LocationPage() {
       </section>
 
       <div className="h-20 bg-white" />
+
       <SocialSection />
+
     </main>
   )
 }
