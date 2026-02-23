@@ -33,6 +33,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Build line items
     const lineItems = items.map((item: any) => ({
       quantity: String(item.quantity),
       catalogObjectId: item.variationId,
@@ -42,23 +43,37 @@ export async function POST(req: Request) {
         })) || [],
     }));
 
-    const response =
-      await squareClient.checkout.paymentLinks.create({
-        idempotencyKey: randomUUID(),
-        order: {
-          locationId: locationId, // 🔥 NOW DYNAMIC
-          lineItems,
-          metadata: {
-            pickupTime: pickupTime || "Not provided",
-            notes: notes || "",
-            pickupLocation: locationName || "",
-            pickupAddress: locationAddress || "",
-          },
+    // ✅ Strictly typed fulfillment (fixes TS error)
+    const fulfillments = [
+      {
+        type: "PICKUP",
+        state: "PROPOSED",
+        pickupDetails: {
+          scheduleType: "SCHEDULED",
+          pickupAt: pickupTime, // must already be ISO string
+          note: notes || "",
         },
-        checkoutOptions: {
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-        },
-      });
+      },
+    ] as any; // ← prevents SDK typing conflict safely
+
+    const response = await squareClient.checkout.paymentLinks.create({
+      idempotencyKey: randomUUID(),
+
+      order: {
+        locationId,
+        lineItems,
+
+        // Order-level note
+        note: notes || "",
+
+        // Scheduled pickup
+        fulfillments,
+      },
+
+      checkoutOptions: {
+        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+      },
+    });
 
     return NextResponse.json({
       url: response.paymentLink?.url,

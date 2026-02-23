@@ -36,4 +36,4 @@ export default function MenuItemCard({ item }: Props) {
       </div>
     </Link>
   );
-}
+} 

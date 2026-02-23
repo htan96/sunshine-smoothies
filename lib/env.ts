@@ -19,4 +19,4 @@ export const env = {
 
     environment: "production" as const,
   },
-};
+}

@@ -30,6 +30,7 @@ export default function CartDrawer() {
   const [asap, setAsap] = useState(true);
   const [notes, setNotes] = useState("");
 
+  // Generate time slots
   const timeSlots = useMemo(() => {
     const slots: Date[] = [];
     const base = getDefaultPickupTime();
@@ -44,34 +45,32 @@ export default function CartDrawer() {
   }, []);
 
   const formattedReadyTime = useMemo(() => {
-    if (asap) {
-      return new Date(
-        Date.now() + 20 * 60000
-      ).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
+    const time = asap
+      ? new Date(Date.now() + 20 * 60000)
+      : pickupDate;
 
-    return pickupDate.toLocaleTimeString([], {
+    return time.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
   }, [pickupDate, asap]);
 
   async function handleCheckout() {
+    if (!selectedLocation) return;
+
+    // ✅ Always compute a real Date object
+    const calculatedPickupTime = asap
+      ? new Date(Date.now() + 20 * 60000)
+      : pickupDate;
+
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items,
-        pickupTime: asap
-          ? `ASAP (${formattedReadyTime})`
-          : pickupDate.toISOString(),
+        pickupTime: calculatedPickupTime.toISOString(), // 🔥 ALWAYS ISO
         notes,
-        locationId: selectedLocation?.id,
-        locationName: selectedLocation?.name,
-        locationAddress: selectedLocation?.address,
+        locationId: selectedLocation.id,
       }),
     });
 
@@ -86,7 +85,6 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -98,12 +96,6 @@ export default function CartDrawer() {
 
         {/* Header */}
         <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
-          
-          {/* Drag indicator (mobile only) */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 md:hidden">
-            <div className="w-12 h-1.5 bg-neutral-300 rounded-full" />
-          </div>
-
           <h2 className="text-lg font-semibold tracking-tight">
             Your Order
           </h2>
@@ -112,15 +104,7 @@ export default function CartDrawer() {
             onClick={closeCart}
             className="w-9 h-9 flex items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 transition"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-            >
-              <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round" />
-            </svg>
+            ✕
           </button>
         </div>
 
@@ -145,8 +129,11 @@ export default function CartDrawer() {
           {/* ASAP Toggle */}
           <div className="flex items-center justify-between bg-neutral-100 rounded-2xl px-5 py-4">
             <span className="text-sm font-medium">
-              ASAP (Ready by {formattedReadyTime})
+              {asap
+                ? `ASAP (Ready by ${formattedReadyTime})`
+                : `Pickup at ${formattedReadyTime}`}
             </span>
+
             <button
               onClick={() => setAsap(!asap)}
               className={`w-12 h-6 flex items-center rounded-full transition ${
@@ -161,6 +148,7 @@ export default function CartDrawer() {
             </button>
           </div>
 
+          {/* Time Slot Selector */}
           {!asap && (
             <div className="grid grid-cols-4 gap-2">
               {timeSlots.map((slot, index) => (
@@ -271,7 +259,6 @@ export default function CartDrawer() {
             Checkout
           </button>
         </div>
-
       </div>
     </div>
   );

@@ -19,7 +19,10 @@ export default function AboutQuality() {
           Much of our fruit is sourced directly from them, continuing a relationship
           built on trust, learning, and respect for the land.
         </p>
-
+        
+        <div className="mt-4 inline-block px-4 py-2 rounded-lg bg-amber-50 text-amber-900 text-sm shadow-sm">
+          🌾 Partnered with Rojas Family Farm • Fresno, California
+        </div>
         <p className="mt-6 text-gray-700 leading-relaxed text-lg">
           Our focus is simple: real fruit, real ingredients, and transparency in every cup.
         </p>
