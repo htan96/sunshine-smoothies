@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 
 const images = [
-  "/community1.jpeg",
-  "/community2.jpeg",
+  "/community1.png",
   "/community3.jpeg",
   "/community4.jpeg",
   "/community5.jpeg",
-  "/community6.jpeg",
+  "/community6.png",
+
 ];
 
 export default function CommunitySlider() {
