@@ -21,7 +21,7 @@ export default function RootLayout({
 
         <main>{children}</main>
 
-        {selectedLocation && <Footer />}
+        <Footer />
 
         {/* Cart Drawer mounted globally */}
         <CartDrawer />

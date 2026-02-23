@@ -14,16 +14,24 @@ export default function MenuPageLayout() {
   } = useMenu();
 
   return (
-    <>
-      <LocationBar />
+    <div className="h-[100dvh] flex flex-col bg-white overflow-hidden">
 
-      <CategoryTabs
-        categories={categories}
-        activeCategory={activeCategory}
-        onChange={setActiveCategory}
-      />
+      {/* Top Section */}
+      <div className="shrink-0">
+        <LocationBar />
 
-      <MenuGrid items={filteredItems} />
-    </>
+        <CategoryTabs
+          categories={categories}
+          activeCategory={activeCategory}
+          onChange={setActiveCategory}
+        />
+      </div>
+
+      {/* Scrollable Menu Area */}
+      <div className="flex-1 overflow-y-auto pb-24">
+        <MenuGrid items={filteredItems} />
+      </div>
+
+    </div>
   );
 }
