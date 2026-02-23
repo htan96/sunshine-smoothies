@@ -1,4 +1,3 @@
-// features/cart/store.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -30,6 +29,7 @@ type CartStore = {
 
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void; // 🔥 added
   clearCart: () => void;
 
   getItemCount: () => number;
@@ -57,7 +57,6 @@ export const useCartStore = create<CartStore>()(
                 JSON.stringify(newItem.modifiers)
           );
 
-          // If identical item exists → increase quantity
           if (existingIndex !== -1) {
             const updatedItems = [...state.items];
             updatedItems[existingIndex].quantity +=
@@ -69,7 +68,6 @@ export const useCartStore = create<CartStore>()(
             };
           }
 
-          // Otherwise add new row
           return {
             items: [...state.items, newItem],
             isOpen: true,
@@ -79,6 +77,17 @@ export const useCartStore = create<CartStore>()(
       removeItem: (id) =>
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
+        })),
+
+      updateQuantity: (id, quantity) =>
+        set((state) => ({
+          items: state.items
+            .map((item) =>
+              item.id === id
+                ? { ...item, quantity: Math.max(1, quantity) }
+                : item
+            )
+            .filter((item) => item.quantity > 0),
         })),
 
       clearCart: () => set({ items: [] }),
@@ -104,7 +113,7 @@ export const useCartStore = create<CartStore>()(
         }, 0),
     }),
     {
-      name: "sunshine-cart", // localStorage key
+      name: "sunshine-cart",
     }
   )
 );
