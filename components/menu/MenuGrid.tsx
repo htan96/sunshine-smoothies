@@ -1,4 +1,4 @@
-import type { MenuItem } from "@/features/square/types";
+import type { MenuItem } from "@/features/menu/types";
 import MenuItemCard from "./MenuItemCard";
 
 type Props = {
