@@ -13,10 +13,10 @@ export const env = {
       process.env.SQUARE_ACCESS_TOKEN,
       "SQUARE_ACCESS_TOKEN"
     ),
-    locationId: requiredEnv(
-      process.env.SQUARE_LOCATION_ID,
-      "SQUARE_LOCATION_ID"
-    ),
+
+    // 🔥 REMOVE REQUIRED LOCATION
+    // We are now passing location dynamically in checkout
+
     environment: "production" as const,
   },
 };
