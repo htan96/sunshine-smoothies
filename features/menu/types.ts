@@ -29,7 +29,8 @@ export type MenuItem = {
   variations: MenuVariation[];
   modifiers: MenuModifierList[];
 
-  // 🔥 Add these
+  // 🔎 TEMP DEBUG FIELDS
+  isArchived?: boolean;
   presentAtAllLocations?: boolean;
   presentAtLocationIds?: string[];
 };
