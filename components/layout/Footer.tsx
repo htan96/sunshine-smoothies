@@ -16,7 +16,7 @@ export default function Footer() {
 
         <Link href="/location" className="flex flex-col items-center text-gray-700 hover:text-yellow-500 transition">
           <MapPin size={22} />
-          <span className="text-xs mt-1">Location</span>
+          <span className="text-xs mt-1">Locations</span>
         </Link>
 
         <Link href="/order" className="flex flex-col items-center text-gray-700 hover:text-yellow-500 transition">
