@@ -14,21 +14,18 @@ export default function MenuPageLayout() {
   } = useMenu();
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-white overflow-hidden">
+    <div className="bg-white flex flex-col">
 
-      {/* Top Section */}
-      <div className="shrink-0">
-        <LocationBar />
+      <LocationBar />
 
-        <CategoryTabs
-          categories={categories}
-          activeCategory={activeCategory}
-          onChange={setActiveCategory}
-        />
-      </div>
+      <CategoryTabs
+        categories={categories}
+        activeCategory={activeCategory}
+        onChange={setActiveCategory}
+      />
 
-      {/* Scrollable Menu Area */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      {/* Only this scrolls visually */}
+      <div className="pb-24">
         <MenuGrid items={filteredItems} />
       </div>
 
