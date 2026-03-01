@@ -64,18 +64,22 @@ export async function POST(req: Request) {
     }
 
     // STEP 2: Create payment link using FULL order object
-    const paymentLinkResponse =
-      await squareClient.checkout.paymentLinks.create({
-        idempotencyKey: randomUUID(),
-        order: createdOrder, // ✅ pass full order
-        checkoutOptions: {
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-        },
-      });
+const { paymentLink } =
+  await squareClient.checkout.paymentLinks.create({
+    idempotencyKey: randomUUID(),
+    order: {
+      locationId,
+      lineItems,
+      fulfillments,
+    },
+    checkoutOptions: {
+      redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+    },
+  });
 
-    return NextResponse.json({
-      url: paymentLinkResponse.paymentLink?.url,
-    });
+return NextResponse.json({
+  url: paymentLink?.url,
+});
 
   } catch (error) {
     console.error("Checkout error:", error);
