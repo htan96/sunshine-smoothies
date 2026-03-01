@@ -10,12 +10,12 @@ import {
 
 export function transformCatalog(
   objects: any[],
-  locationId: string,
-  inStockVariationIds?: Set<string> // ✅ NEW
+  locationId: string
 ): { categories: MenuCategory[]; items: MenuItem[] } {
   const modifierListMap = new Map<string, MenuModifierList>();
   const categoryMap = new Map<string, string>();
   const imageMap = new Map<string, string>();
+
   const categories: MenuCategory[] = [];
 
   /*
@@ -105,41 +105,46 @@ export function transformCatalog(
 
     /*
     -------------------------
-    Variations (KEEP ALL, tag soldOut)
+    Variations
     -------------------------
     */
-    const variations: MenuVariation[] = (itemData.variations ?? [])
+    const variationsAll: MenuVariation[] = (itemData.variations ?? [])
       .map((variation: any): MenuVariation | null => {
-        if (
-          variation.type !== "ITEM_VARIATION" ||
-          !variation.itemVariationData
-        )
+        if (variation.type !== "ITEM_VARIATION" || !variation.itemVariationData)
           return null;
 
         if (variation.isDeleted) return null;
 
         const v = variation.itemVariationData;
         const amount = v.priceMoney?.amount;
+
+        // Some items might not have a price in catalog
         if (amount == null) return null;
 
-        const isInStock = inStockVariationIds
-          ? inStockVariationIds.has(variation.id)
-          : true;
+        // ✅ Square “sold out” override lives here
+        const override = (v.locationOverrides ?? []).find(
+          (o: any) => o.locationId === locationId
+        );
+
+        const isSoldOut = override?.soldOut ?? false;
 
         return {
           id: variation.id,
           name: v.name ?? "Default",
           price: Number(amount),
-          soldOut: !isInStock, // ✅ NEW
+          isSoldOut,
+          trackInventory: v.trackInventory ?? false, // (optional debug)
         };
       })
       .filter((v: MenuVariation | null): v is MenuVariation => v !== null);
 
-    // If item has no purchasable variations at all, skip it
-    if (!variations.length) continue;
+    if (!variationsAll.length) continue;
 
-    // Item is sold out if every variation is sold out
-    const itemSoldOut = variations.every((v) => v.soldOut);
+    // ✅ Hide sold-out variations (recommended)
+    const variations = variationsAll.filter((v) => !v.isSoldOut);
+
+    // ✅ If ALL variations sold out, hide the entire item
+    if (!variations.length) continue;
 
     /*
     -------------------------
@@ -148,10 +153,7 @@ export function transformCatalog(
     */
     const modifiers: MenuModifierList[] = (itemData.modifierListInfo ?? [])
       .map((info: any) => modifierListMap.get(info.modifierListId))
-      .filter(
-        (m: MenuModifierList | undefined): m is MenuModifierList =>
-          m !== undefined
-      );
+      .filter((m: MenuModifierList | undefined): m is MenuModifierList => m !== undefined);
 
     /*
     -------------------------
@@ -186,9 +188,7 @@ export function transformCatalog(
       variations,
       modifiers,
 
-      soldOut: itemSoldOut, // ✅ NEW
-
-      // 🔎 TEMP DEBUG FIELDS
+      // TEMP DEBUG FIELDS
       isArchived: itemData.isArchived ?? false,
       presentAtAllLocations: obj.presentAtAllLocations ?? false,
       presentAtLocationIds: obj.presentAtLocationIds ?? [],
