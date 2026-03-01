@@ -13,25 +13,36 @@ function jsonSafe(value: any) {
 
 export async function GET() {
   try {
-    const targetId = "M7VL4YNWPGK5E453ORGSO7IE";
+    const targetId = "M7VL4YNWPGK5E453ORGSO7IE"; // Your ITEM ID
 
     const res = await squareClient.catalog.search({
-      objectTypes: ["ITEM"],
+      objectTypes: ["ITEM", "ITEM_VARIATION", "TAX"],
       includeRelatedObjects: true,
     });
 
-    const combined = [...(res.objects ?? []), ...(res.relatedObjects ?? [])];
-    const match = combined.find((o: any) => o?.id === targetId) ?? null;
+    const combined = [
+      ...(res.objects ?? []),
+      ...(res.relatedObjects ?? []),
+    ];
+
+const item = combined.find(
+  (o: any) => o?.id === targetId && o?.type === "ITEM"
+) as any;
+
+const taxIds =
+  item && item.type === "ITEM"
+    ? item.itemData?.taxIds ?? []
+    : [];
+
+    const taxObjects = combined.filter(
+      (o: any) => o?.type === "TAX"
+    );
 
     return NextResponse.json(
       jsonSafe({
-        targetId,
-        totals: {
-          objects: res.objects?.length ?? 0,
-          related: res.relatedObjects?.length ?? 0,
-          combined: combined.length,
-        },
-        match,
+        item,
+        taxIds,
+        taxObjects,
       }),
       { status: 200 }
     );

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { SquareClient } from "square";
+import {
+  SquareClient,
+  FulfillmentType,
+  FulfillmentState,
+  FulfillmentPickupDetailsScheduleType,
+} from "square";
 
 const squareClient = new SquareClient({
   token: process.env.SQUARE_ACCESS_TOKEN!,
@@ -9,21 +14,14 @@ const squareClient = new SquareClient({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-
     const { items, pickupTime, notes, locationId } = body;
 
     if (!items?.length) {
-      return NextResponse.json(
-        { error: "Cart is empty" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
     if (!locationId) {
-      return NextResponse.json(
-        { error: "Missing location ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing location ID" }, { status: 400 });
     }
 
     const lineItems = items.map((item: any) => ({
@@ -37,23 +35,30 @@ export async function POST(req: Request) {
 
     const fulfillments = [
       {
-        type: "PICKUP",
-        state: "PROPOSED",
+        type: FulfillmentType.Pickup,
+        state: FulfillmentState.Proposed,
         pickupDetails: {
-          scheduleType: "SCHEDULED",
+          scheduleType: FulfillmentPickupDetailsScheduleType.Scheduled,
           pickupAt: pickupTime,
           note: notes || "",
+          recipient: {
+            displayName: "Pickup Customer",
+          },
         },
       },
-    ] as any;
+    ];
 
-    // STEP 1: Create order (this triggers tax calculation)
+    // ✅ STEP 1 — Create order (forces tax calculation)
     const orderResponse = await squareClient.orders.create({
       idempotencyKey: randomUUID(),
       order: {
         locationId,
         lineItems,
         fulfillments,
+        pricingOptions: {
+          autoApplyTaxes: true,
+          autoApplyDiscounts: true,
+        },
       },
     });
 
@@ -63,30 +68,35 @@ export async function POST(req: Request) {
       throw new Error("Order creation failed");
     }
 
-    // STEP 2: Create payment link using FULL order object
-const { paymentLink } =
+    console.log("ORDER TOTALS:", createdOrder.totalMoney);
+    console.log("ORDER TAXES:", createdOrder.taxes);
+
+    // ✅ STEP 2 — Create payment link using that order
+const paymentLinkResponse =
   await squareClient.checkout.paymentLinks.create({
     idempotencyKey: randomUUID(),
     order: {
       locationId,
       lineItems,
       fulfillments,
+      pricingOptions: {
+        autoApplyTaxes: true,
+        autoApplyDiscounts: true,
+      },
     },
     checkoutOptions: {
       redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
     },
   });
+    const paymentLink = paymentLinkResponse.paymentLink;
 
-return NextResponse.json({
-  url: paymentLink?.url,
-});
+    return NextResponse.json({
+      url: paymentLink?.url,
+      orderId: createdOrder.id,
+    });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Checkout error:", error);
-
-    return NextResponse.json(
-      { error: "Checkout failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
   }
 }
