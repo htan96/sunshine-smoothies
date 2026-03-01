@@ -10,14 +10,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const {
-      items,
-      pickupTime,
-      notes,
-      locationId,
-    } = body;
+    const { items, pickupTime, notes, locationId } = body;
 
-    if (!items || !Array.isArray(items) || items.length === 0) {
+    if (!items?.length) {
       return NextResponse.json(
         { error: "Cart is empty" },
         { status: 400 }
@@ -31,7 +26,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🧾 Build line items
     const lineItems = items.map((item: any) => ({
       quantity: String(item.quantity),
       catalogObjectId: item.variationId,
@@ -41,21 +35,20 @@ export async function POST(req: Request) {
         })) || [],
     }));
 
-    // 🚚 Scheduled Pickup Fulfillment
     const fulfillments = [
       {
         type: "PICKUP",
         state: "PROPOSED",
         pickupDetails: {
           scheduleType: "SCHEDULED",
-          pickupAt: pickupTime, // Must be ISO string
+          pickupAt: pickupTime,
           note: notes || "",
         },
       },
     ] as any;
 
-    // ✅ STEP 1: Create Order (forces Square to calculate tax)
-    const { order } = await squareClient.orders.create({
+    // STEP 1: Create order (this triggers tax calculation)
+    const orderResponse = await squareClient.orders.create({
       idempotencyKey: randomUUID(),
       order: {
         locationId,
@@ -64,26 +57,26 @@ export async function POST(req: Request) {
       },
     });
 
-    if (!order?.id) {
-      throw new Error("Failed to create order");
+    const createdOrder = orderResponse.order;
+
+    if (!createdOrder?.id) {
+      throw new Error("Order creation failed");
     }
 
-    // ✅ STEP 2: Create Payment Link using that order
-const { paymentLink } =
-  await squareClient.checkout.paymentLinks.create({
-    idempotencyKey: randomUUID(),
-    order: {
-      id: order.id,
-      locationId: locationId, // ✅ REQUIRED in your SDK version
-    },
-    checkoutOptions: {
-      redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-    },
-  });
+    // STEP 2: Create payment link using FULL order object
+    const paymentLinkResponse =
+      await squareClient.checkout.paymentLinks.create({
+        idempotencyKey: randomUUID(),
+        order: createdOrder, // ✅ pass full order
+        checkoutOptions: {
+          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+        },
+      });
 
-return NextResponse.json({
-  url: paymentLink?.url,
-});
+    return NextResponse.json({
+      url: paymentLinkResponse.paymentLink?.url,
+    });
+
   } catch (error) {
     console.error("Checkout error:", error);
 
