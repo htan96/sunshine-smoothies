@@ -1,7 +1,10 @@
+// features/menu/types.ts
+
 export type MenuVariation = {
   id: string;
   name: string;
   price: number;
+  soldOut?: boolean; // ✅ NEW
 };
 
 export type MenuModifier = {
@@ -28,6 +31,8 @@ export type MenuItem = {
   categoryName: string;
   variations: MenuVariation[];
   modifiers: MenuModifierList[];
+
+  soldOut?: boolean; // ✅ NEW (item-level rollup)
 
   // 🔎 TEMP DEBUG FIELDS
   isArchived?: boolean;

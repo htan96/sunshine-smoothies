@@ -10,12 +10,12 @@ import {
 
 export function transformCatalog(
   objects: any[],
-  locationId: string
+  locationId: string,
+  inStockVariationIds?: Set<string> // ✅ NEW
 ): { categories: MenuCategory[]; items: MenuItem[] } {
-
   const modifierListMap = new Map<string, MenuModifierList>();
   const categoryMap = new Map<string, string>();
-  const imageMap = new Map<string, string>(); // ✅ NEW
+  const imageMap = new Map<string, string>();
   const categories: MenuCategory[] = [];
 
   /*
@@ -23,11 +23,8 @@ export function transformCatalog(
   Build Categories
   ==========================
   */
-
   for (const obj of objects) {
     if (obj.type === "CATEGORY" && obj.categoryData) {
-
-      // Prevent duplicates
       if (categoryMap.has(obj.id)) continue;
 
       const category: MenuCategory = {
@@ -47,12 +44,9 @@ export function transformCatalog(
   ==========================
   */
   for (const obj of objects) {
-    if (obj.type !== "MODIFIER_LIST" || !obj.modifierListData)
-      continue;
+    if (obj.type !== "MODIFIER_LIST" || !obj.modifierListData) continue;
 
-    const modifiers: MenuModifier[] = (
-      obj.modifierListData.modifiers ?? []
-    )
+    const modifiers: MenuModifier[] = (obj.modifierListData.modifiers ?? [])
       .map((mod: any): MenuModifier | null => {
         if (!mod.modifierData) return null;
 
@@ -62,25 +56,21 @@ export function transformCatalog(
           price: Number(mod.modifierData.priceMoney?.amount ?? 0),
         };
       })
-      .filter(
-        (m: MenuModifier | null): m is MenuModifier =>
-          m !== null
-      );
+      .filter((m: MenuModifier | null): m is MenuModifier => m !== null);
 
     modifierListMap.set(obj.id, {
       id: obj.id,
       name: obj.modifierListData.name ?? "Options",
       min: Number(obj.modifierListData.minSelectedModifiers ?? 0),
       max: Number(obj.modifierListData.maxSelectedModifiers ?? 0),
-      allowQuantities:
-        obj.modifierListData.allowQuantities ?? false,
+      allowQuantities: obj.modifierListData.allowQuantities ?? false,
       modifiers,
     });
   }
 
   /*
   ==========================
-  Build Image Map  ✅ NEW
+  Build Image Map
   ==========================
   */
   for (const obj of objects) {
@@ -115,12 +105,10 @@ export function transformCatalog(
 
     /*
     -------------------------
-    Variations
+    Variations (KEEP ALL, tag soldOut)
     -------------------------
     */
-    const variations: MenuVariation[] = (
-      itemData.variations ?? []
-    )
+    const variations: MenuVariation[] = (itemData.variations ?? [])
       .map((variation: any): MenuVariation | null => {
         if (
           variation.type !== "ITEM_VARIATION" ||
@@ -132,37 +120,37 @@ export function transformCatalog(
 
         const v = variation.itemVariationData;
         const amount = v.priceMoney?.amount;
-
         if (amount == null) return null;
+
+        const isInStock = inStockVariationIds
+          ? inStockVariationIds.has(variation.id)
+          : true;
 
         return {
           id: variation.id,
           name: v.name ?? "Default",
           price: Number(amount),
+          soldOut: !isInStock, // ✅ NEW
         };
       })
-      .filter(
-        (v: MenuVariation | null): v is MenuVariation =>
-          v !== null
-      );
+      .filter((v: MenuVariation | null): v is MenuVariation => v !== null);
 
+    // If item has no purchasable variations at all, skip it
     if (!variations.length) continue;
+
+    // Item is sold out if every variation is sold out
+    const itemSoldOut = variations.every((v) => v.soldOut);
 
     /*
     -------------------------
     Modifiers
     -------------------------
     */
-    const modifiers: MenuModifierList[] = (
-      itemData.modifierListInfo ?? []
-    )
-      .map((info: any) =>
-        modifierListMap.get(info.modifierListId)
-      )
+    const modifiers: MenuModifierList[] = (itemData.modifierListInfo ?? [])
+      .map((info: any) => modifierListMap.get(info.modifierListId))
       .filter(
-        (
-          m: MenuModifierList | undefined
-        ): m is MenuModifierList => m !== undefined
+        (m: MenuModifierList | undefined): m is MenuModifierList =>
+          m !== undefined
       );
 
     /*
@@ -170,23 +158,18 @@ export function transformCatalog(
     Category
     -------------------------
     */
-    const categoryId =
-      itemData.categories?.[0]?.id ?? null;
+    const categoryId = itemData.categories?.[0]?.id ?? null;
 
     const categoryName =
-      (categoryId && categoryMap.get(categoryId)) ||
-      "Uncategorized";
+      (categoryId && categoryMap.get(categoryId)) || "Uncategorized";
 
     /*
     -------------------------
-    Image  ✅ FIXED
+    Image
     -------------------------
     */
-    const imageId =
-      itemData.imageIds?.[0] ?? null;
-
-    const image =
-      (imageId && imageMap.get(imageId)) ?? null;
+    const imageId = itemData.imageIds?.[0] ?? null;
+    const image = (imageId && imageMap.get(imageId)) ?? null;
 
     /*
     -------------------------
@@ -203,12 +186,12 @@ export function transformCatalog(
       variations,
       modifiers,
 
-      // TEMP DEBUG FIELDS
+      soldOut: itemSoldOut, // ✅ NEW
+
+      // 🔎 TEMP DEBUG FIELDS
       isArchived: itemData.isArchived ?? false,
-      presentAtAllLocations:
-        obj.presentAtAllLocations ?? false,
-      presentAtLocationIds:
-        obj.presentAtLocationIds ?? [],
+      presentAtAllLocations: obj.presentAtAllLocations ?? false,
+      presentAtLocationIds: obj.presentAtLocationIds ?? [],
     });
   }
 
@@ -217,15 +200,10 @@ export function transformCatalog(
   Filter Categories By Location
   ==========================
   */
-
-  // Get category IDs that actually have valid items
   const categoryIdsWithItems = new Set(
-    items
-      .map((item) => item.categoryId)
-      .filter((id): id is string => Boolean(id))
+    items.map((item) => item.categoryId).filter((id): id is string => Boolean(id))
   );
 
-  // Keep only categories that have at least one item
   const filteredCategories = categories.filter((cat) =>
     categoryIdsWithItems.has(cat.id)
   );

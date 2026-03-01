@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { fetchCatalogItems } from "@/features/square/catalog";
+import { fetchCatalogItemsWithStock } from "@/features/square/catalog";
 import { transformCatalog } from "@/features/menu/transform";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const locationId = process.env.SQUARE_LOCATION_ID;
+    // ✅ prefer query param, fallback to env
+    const { searchParams } = new URL(req.url);
+    const locationId =
+      searchParams.get("location") ?? process.env.SQUARE_LOCATION_ID;
 
     if (!locationId) {
       return NextResponse.json(
@@ -13,21 +16,25 @@ export async function GET() {
       );
     }
 
-    // 1️⃣ Fetch raw Square catalog objects
-    const catalogObjects = await fetchCatalogItems();
+    // 1️⃣ Fetch catalog + stock info
+    const { objects: catalogObjects, inStockVariationIds } =
+      await fetchCatalogItemsWithStock(locationId);
 
     if (!catalogObjects || !catalogObjects.length) {
-      return NextResponse.json([], { status: 200 });
+      return NextResponse.json(
+        { categories: [], items: [] },
+        { status: 200 }
+      );
     }
 
-    // 2️⃣ Transform into frontend-friendly structure
-    const menuItems = transformCatalog(
+    // 2️⃣ Transform into frontend-friendly structure (keeps items, marks sold out)
+    const menu = transformCatalog(
       catalogObjects,
-      locationId
+      locationId,
+      inStockVariationIds
     );
 
-    return NextResponse.json(menuItems, { status: 200 });
-
+    return NextResponse.json(menu, { status: 200 });
   } catch (error) {
     console.error("Square catalog fetch failed:", error);
 
