@@ -15,8 +15,6 @@ export async function POST(req: Request) {
       pickupTime,
       notes,
       locationId,
-      locationName,
-      locationAddress,
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -33,7 +31,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Build line items
+    // 🧾 Build line items
     const lineItems = items.map((item: any) => ({
       quantity: String(item.quantity),
       catalogObjectId: item.variationId,
@@ -43,38 +41,49 @@ export async function POST(req: Request) {
         })) || [],
     }));
 
-    // ✅ Strictly typed fulfillment (fixes TS error)
+    // 🚚 Scheduled Pickup Fulfillment
     const fulfillments = [
       {
         type: "PICKUP",
         state: "PROPOSED",
         pickupDetails: {
           scheduleType: "SCHEDULED",
-          pickupAt: pickupTime, // must already be ISO string
+          pickupAt: pickupTime, // Must be ISO string
           note: notes || "",
         },
       },
-    ] as any; // ← prevents SDK typing conflict safely
+    ] as any;
 
-    const response = await squareClient.checkout.paymentLinks.create({
+    // ✅ STEP 1: Create Order (forces Square to calculate tax)
+    const { order } = await squareClient.orders.create({
       idempotencyKey: randomUUID(),
-
       order: {
         locationId,
         lineItems,
-        // Scheduled pickup
         fulfillments,
       },
-
-      checkoutOptions: {
-        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-      },
     });
 
-    return NextResponse.json({
-      url: response.paymentLink?.url,
-    });
+    if (!order?.id) {
+      throw new Error("Failed to create order");
+    }
 
+    // ✅ STEP 2: Create Payment Link using that order
+const { paymentLink } =
+  await squareClient.checkout.paymentLinks.create({
+    idempotencyKey: randomUUID(),
+    order: {
+      id: order.id,
+      locationId: locationId, // ✅ REQUIRED in your SDK version
+    },
+    checkoutOptions: {
+      redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+    },
+  });
+
+return NextResponse.json({
+  url: paymentLink?.url,
+});
   } catch (error) {
     console.error("Checkout error:", error);
 
