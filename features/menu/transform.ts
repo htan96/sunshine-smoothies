@@ -86,8 +86,6 @@ export function transformCatalog(
   */
   const items: MenuItem[] = [];
 
-  const HIDDEN_CATEGORIES = ["combos"]; // 🔥 Add more if needed
-
   for (const obj of objects) {
     if (obj.type !== "ITEM") continue;
     if (obj.isDeleted) continue;
@@ -95,8 +93,10 @@ export function transformCatalog(
     const itemData = obj.itemData;
     if (!itemData) continue;
 
+    // ❌ Skip archived
     if (itemData.isArchived) continue;
 
+    // ❌ Skip if not available at location
     const isAtLocation =
       obj.presentAtAllLocations ||
       (obj.presentAtLocationIds ?? []).includes(locationId);
@@ -105,25 +105,15 @@ export function transformCatalog(
 
     /*
     -------------------------
-    Category (CHECK ALL)
+    Category
     -------------------------
     */
-    const categoryIds = (itemData.categories ?? []).map((c: any) => c.id);
-
-    const categoryNames = categoryIds
-      .map((id: string) => categoryMap.get(id))
-      .filter((name): name is string => Boolean(name));
-
-    // 🔥 FILTER OUT hidden categories
-    const isHidden = categoryNames.some((name) =>
-      HIDDEN_CATEGORIES.includes(name.toLowerCase().trim())
-    );
-
-    if (isHidden) continue;
-
-    const categoryId = categoryIds[0] ?? null;
+    const categoryId = itemData.categories?.[0]?.id ?? null;
     const categoryName =
       (categoryId && categoryMap.get(categoryId)) || "Uncategorized";
+
+    // 🔥 FILTER OUT COMBOS CATEGORY
+    if (categoryName === "Combos") continue;
 
     /*
     -------------------------
@@ -209,7 +199,7 @@ export function transformCatalog(
 
   /*
   ==========================
-  Filter Categories By Items
+  Filter Categories By Location
   ==========================
   */
   const categoryIdsWithItems = new Set(
