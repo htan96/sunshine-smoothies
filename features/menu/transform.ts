@@ -86,6 +86,8 @@ export function transformCatalog(
   */
   const items: MenuItem[] = [];
 
+  const HIDDEN_CATEGORIES = ["combos"]; // 🔥 Add more if needed
+
   for (const obj of objects) {
     if (obj.type !== "ITEM") continue;
     if (obj.isDeleted) continue;
@@ -93,10 +95,8 @@ export function transformCatalog(
     const itemData = obj.itemData;
     if (!itemData) continue;
 
-    // ❌ Skip archived
     if (itemData.isArchived) continue;
 
-    // ❌ Skip if not available at location
     const isAtLocation =
       obj.presentAtAllLocations ||
       (obj.presentAtLocationIds ?? []).includes(locationId);
@@ -105,23 +105,45 @@ export function transformCatalog(
 
     /*
     -------------------------
+    Category (CHECK ALL)
+    -------------------------
+    */
+    const categoryIds = (itemData.categories ?? []).map((c: any) => c.id);
+
+    const categoryNames = categoryIds
+      .map((id: string) => categoryMap.get(id))
+      .filter((name): name is string => Boolean(name));
+
+    // 🔥 FILTER OUT hidden categories
+    const isHidden = categoryNames.some((name) =>
+      HIDDEN_CATEGORIES.includes(name.toLowerCase().trim())
+    );
+
+    if (isHidden) continue;
+
+    const categoryId = categoryIds[0] ?? null;
+    const categoryName =
+      (categoryId && categoryMap.get(categoryId)) || "Uncategorized";
+
+    /*
+    -------------------------
     Variations
     -------------------------
     */
     const variationsAll: MenuVariation[] = (itemData.variations ?? [])
       .map((variation: any): MenuVariation | null => {
-        if (variation.type !== "ITEM_VARIATION" || !variation.itemVariationData)
+        if (
+          variation.type !== "ITEM_VARIATION" ||
+          !variation.itemVariationData
+        )
           return null;
 
         if (variation.isDeleted) return null;
 
         const v = variation.itemVariationData;
         const amount = v.priceMoney?.amount;
-
-        // Some items might not have a price in catalog
         if (amount == null) return null;
 
-        // ✅ Square “sold out” override lives here
         const override = (v.locationOverrides ?? []).find(
           (o: any) => o.locationId === locationId
         );
@@ -133,17 +155,16 @@ export function transformCatalog(
           name: v.name ?? "Default",
           price: Number(amount),
           isSoldOut,
-          trackInventory: v.trackInventory ?? false, // (optional debug)
+          trackInventory: v.trackInventory ?? false,
         };
       })
-      .filter((v: MenuVariation | null): v is MenuVariation => v !== null);
+      .filter(
+        (v: MenuVariation | null): v is MenuVariation => v !== null
+      );
 
     if (!variationsAll.length) continue;
 
-    // ✅ Hide sold-out variations (recommended)
     const variations = variationsAll.filter((v) => !v.isSoldOut);
-
-    // ✅ If ALL variations sold out, hide the entire item
     if (!variations.length) continue;
 
     /*
@@ -153,17 +174,10 @@ export function transformCatalog(
     */
     const modifiers: MenuModifierList[] = (itemData.modifierListInfo ?? [])
       .map((info: any) => modifierListMap.get(info.modifierListId))
-      .filter((m: MenuModifierList | undefined): m is MenuModifierList => m !== undefined);
-
-    /*
-    -------------------------
-    Category
-    -------------------------
-    */
-    const categoryId = itemData.categories?.[0]?.id ?? null;
-
-    const categoryName =
-      (categoryId && categoryMap.get(categoryId)) || "Uncategorized";
+      .filter(
+        (m: MenuModifierList | undefined): m is MenuModifierList =>
+          m !== undefined
+      );
 
     /*
     -------------------------
@@ -187,8 +201,6 @@ export function transformCatalog(
       categoryName,
       variations,
       modifiers,
-
-      // TEMP DEBUG FIELDS
       isArchived: itemData.isArchived ?? false,
       presentAtAllLocations: obj.presentAtAllLocations ?? false,
       presentAtLocationIds: obj.presentAtLocationIds ?? [],
@@ -197,11 +209,13 @@ export function transformCatalog(
 
   /*
   ==========================
-  Filter Categories By Location
+  Filter Categories By Items
   ==========================
   */
   const categoryIdsWithItems = new Set(
-    items.map((item) => item.categoryId).filter((id): id is string => Boolean(id))
+    items
+      .map((item) => item.categoryId)
+      .filter((id): id is string => Boolean(id))
   );
 
   const filteredCategories = categories.filter((cat) =>
