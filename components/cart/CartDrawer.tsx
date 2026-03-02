@@ -10,6 +10,13 @@ function getDefaultPickupTime() {
   return now;
 }
 
+// ✅ Ordering hours check (8AM–4PM)
+function isWithinOrderingHours() {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 8 && hour < 16;
+}
+
 export default function CartDrawer() {
   const {
     items,
@@ -29,6 +36,8 @@ export default function CartDrawer() {
   );
   const [asap, setAsap] = useState(true);
   const [notes, setNotes] = useState("");
+
+  const orderingOpen = isWithinOrderingHours();
 
   // Generate time slots
   const timeSlots = useMemo(() => {
@@ -58,7 +67,12 @@ export default function CartDrawer() {
   async function handleCheckout() {
     if (!selectedLocation) return;
 
-    // ✅ Always compute a real Date object
+    // 🚫 Block if outside ordering hours
+    if (!orderingOpen) {
+      alert("Online ordering is available between 8:00 AM and 4:00 PM.");
+      return;
+    }
+
     const calculatedPickupTime = asap
       ? new Date(Date.now() + 20 * 60000)
       : pickupDate;
@@ -68,7 +82,7 @@ export default function CartDrawer() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         items,
-        pickupTime: calculatedPickupTime.toISOString(), // 🔥 ALWAYS ISO
+        pickupTime: calculatedPickupTime.toISOString(),
         notes,
         locationId: selectedLocation.id,
       }),
@@ -245,6 +259,13 @@ export default function CartDrawer() {
 
         {/* Footer */}
         <div className="border-t border-neutral-100 px-6 py-5 bg-white space-y-4">
+
+          {!orderingOpen && (
+            <p className="text-xs text-red-500 text-center">
+              Online ordering is available daily from 8:00 AM to 4:00 PM.
+            </p>
+          )}
+
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
             <span>
@@ -254,9 +275,14 @@ export default function CartDrawer() {
 
           <button
             onClick={handleCheckout}
-            className="w-full bg-black text-white py-4 rounded-full font-semibold hover:opacity-90 transition"
+            disabled={!orderingOpen}
+            className={`w-full py-4 rounded-full font-semibold transition ${
+              orderingOpen
+                ? "bg-black text-white hover:opacity-90"
+                : "bg-neutral-300 text-neutral-500 cursor-not-allowed"
+            }`}
           >
-            Checkout
+            {orderingOpen ? "Checkout" : "Ordering Closed (8AM–4PM)"}
           </button>
         </div>
       </div>
