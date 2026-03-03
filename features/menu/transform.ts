@@ -98,7 +98,8 @@ export function transformCatalog(
 
     // ❌ Skip if not available at location
     const isAtLocation =
-      obj.presentAtAllLocations ||
+    
+    obj.presentAtAllLocations ||
       (obj.presentAtLocationIds ?? []).includes(locationId);
 
     if (!isAtLocation) continue;
