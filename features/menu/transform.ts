@@ -98,8 +98,7 @@ export function transformCatalog(
 
     // ❌ Skip if not available at location
     const isAtLocation =
-    
-    obj.presentAtAllLocations ||
+      obj.presentAtAllLocations ||
       (obj.presentAtLocationIds ?? []).includes(locationId);
 
     if (!isAtLocation) continue;
@@ -115,6 +114,17 @@ export function transformCatalog(
 
     // 🔥 FILTER OUT COMBOS CATEGORY
     if (categoryName === "Combos") continue;
+
+    // 🔥 FILTER OUT SPECIFIC ITEMS BY NAME
+    const excludedItems = ["muffin", "chips", "fruit cup"];
+
+    if (
+      excludedItems.some((name) =>
+        itemData.name?.toLowerCase().includes(name)
+      )
+    ) {
+      continue;
+    }
 
     /*
     -------------------------
