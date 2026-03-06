@@ -8,14 +8,12 @@ export async function POST(req: NextRequest) {
 
     console.log("WEBHOOK BODY:", body);
 
-    // Only process order.updated events
     if (body.type !== "order.updated") {
       return NextResponse.json({ received: true });
     }
 
     const orderState = body?.data?.object?.order_updated?.state;
 
-    // Ignore updates until order is completed
     if (orderState !== "COMPLETED") {
       return NextResponse.json({ received: true });
     }
@@ -23,17 +21,22 @@ export async function POST(req: NextRequest) {
     const orderId = body?.data?.id;
 
     if (!orderId) {
+      console.log("No order id found");
       return NextResponse.json({ received: true });
     }
 
-    // Retrieve full order from Square
+    console.log("Fetching order:", orderId);
+
     const orderResponse = await squareClient.orders.get(orderId);
 
     const order = orderResponse.order;
 
     if (!order) {
+      console.log("Order retrieval failed");
       return NextResponse.json({ received: true });
     }
+
+    console.log("Order retrieved:", order.id);
 
     await handleFuelOrder(order);
 
