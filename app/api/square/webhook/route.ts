@@ -5,17 +5,14 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Only process order updates
+    console.log("WEBHOOK EVENT:", body.type);
+    console.log("ORDER DATA:", body.data?.object?.order);
+
     if (body.type !== "order.updated") {
       return NextResponse.json({ received: true });
     }
 
     const order = body?.data?.object?.order;
-
-    // Safety check
-    if (!order) {
-      return NextResponse.json({ received: true });
-    }
 
     await handleFuelOrder(order);
 
