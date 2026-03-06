@@ -1,23 +1,40 @@
 import { supabase } from "@/lib/supabase";
 import { squareClient } from "@/lib/square/client";
 
-// 🔥 REPLACE THESE WITH YOUR REAL VARIATION IDs
+// Fuel Pack Purchases
 export const PACK_VARIATIONS = {
-  MEDIUM: "REPLACE_MEDIUM_PACK_ID",
-  LARGE: "REPLACE_LARGE_PACK_ID",
-  XL: "REPLACE_XL_PACK_ID",
-  JUMBO: "REPLACE_JUMBO_PACK_ID",
+  MEDIUM: "KXQQMGMMFQ6W3HR4KSCALRAV",
+  LARGE: "XWUYXYSNYYWNVJU3EJSIYTLL",
+  XL: "JM44WSKHPJGAMNSJTSOQIH4R",
+  JUMBO: "NW2DIXVFXRFELXRUNRDB3NE2",
 };
 
+// Fuel Pack Redemptions
 export const REDEEM_VARIATIONS = {
-  MEDIUM: "REPLACE_MEDIUM_REDEEM_ID",
-  LARGE: "REPLACE_LARGE_REDEEM_ID",
-  XL: "REPLACE_XL_REDEEM_ID",
-  JUMBO: "REPLACE_JUMBO_REDEEM_ID",
+  MEDIUM: "RMILMPJ3UMVOMOH4LFBQDS4H",
+  LARGE: "BWJMGIMUZHU3EVPBEKMFMPEB",
+  XL: "F7QLDQMENXO4CIOQO6QPHIV5",
+  JUMBO: "7XQ7EXVJELMIM63UDTLMLAC7",
 };
 
 function formatDisplay(balance: any) {
   return `FM-${balance.fuel_medium} FL-${balance.fuel_large} FXL-${balance.fuel_xl} FJ-${balance.fuel_jumbo}`;
+}
+
+async function recordTransaction(
+  customerId: string,
+  orderId: string,
+  type: string,
+  size: string,
+  quantity: number
+) {
+  await supabase.from("fuel_transactions").insert({
+    square_customer_id: customerId,
+    order_id: orderId,
+    type,
+    size,
+    quantity,
+  });
 }
 
 export async function handleFuelOrder(order: any) {
@@ -26,7 +43,7 @@ export async function handleFuelOrder(order: any) {
 
   if (!customerId) return;
 
-  // 1️⃣ Prevent duplicate processing
+  // Prevent duplicate processing
   const { data: existing } = await supabase
     .from("processed_orders")
     .select("order_id")
@@ -35,7 +52,7 @@ export async function handleFuelOrder(order: any) {
 
   if (existing) return;
 
-  // 2️⃣ Get existing balance
+  // Get existing balance
   const { data: existingBalance } = await supabase
     .from("customer_fuel_balances")
     .select("*")
@@ -50,30 +67,33 @@ export async function handleFuelOrder(order: any) {
     fuel_jumbo: 0,
   };
 
-  // 3️⃣ Process line items
   for (const item of order.line_items || []) {
-    const variationId = item.variation_id;
+    const variationId = item.catalog_object_id;
     const quantity = Number(item.quantity || 1);
 
     // PACK PURCHASES
     if (variationId === PACK_VARIATIONS.MEDIUM) {
-      balance.fuel_medium += 8;
-      await recordTransaction(customerId, orderId, "PACK", "MEDIUM", 8);
+      const credits = 8 * quantity;
+      balance.fuel_medium += credits;
+      await recordTransaction(customerId, orderId, "PACK", "MEDIUM", credits);
     }
 
     if (variationId === PACK_VARIATIONS.LARGE) {
-      balance.fuel_large += 8;
-      await recordTransaction(customerId, orderId, "PACK", "LARGE", 8);
+      const credits = 8 * quantity;
+      balance.fuel_large += credits;
+      await recordTransaction(customerId, orderId, "PACK", "LARGE", credits);
     }
 
     if (variationId === PACK_VARIATIONS.XL) {
-      balance.fuel_xl += 8;
-      await recordTransaction(customerId, orderId, "PACK", "XL", 8);
+      const credits = 8 * quantity;
+      balance.fuel_xl += credits;
+      await recordTransaction(customerId, orderId, "PACK", "XL", credits);
     }
 
     if (variationId === PACK_VARIATIONS.JUMBO) {
-      balance.fuel_jumbo += 8;
-      await recordTransaction(customerId, orderId, "PACK", "JUMBO", 8);
+      const credits = 8 * quantity;
+      balance.fuel_jumbo += credits;
+      await recordTransaction(customerId, orderId, "PACK", "JUMBO", credits);
     }
 
     // REDEMPTIONS
@@ -98,7 +118,7 @@ export async function handleFuelOrder(order: any) {
     }
   }
 
-  // 4️⃣ Upsert updated balance
+  // Update balance
   await supabase.from("customer_fuel_balances").upsert({
     square_customer_id: customerId,
     fuel_medium: balance.fuel_medium,
@@ -108,30 +128,16 @@ export async function handleFuelOrder(order: any) {
     updated_at: new Date(),
   });
 
-  // 5️⃣ Mark order as processed
+  // Mark order as processed
   await supabase.from("processed_orders").insert({
     order_id: orderId,
   });
 
-  // 6️⃣ Update Square Customer Last Name
+  // Update Square customer display
   const display = formatDisplay(balance);
 
-await squareClient.customers.update({
-  customerId: customerId,
-  familyName: display,
-});
-async function recordTransaction(
-  customerId: string,
-  orderId: string,
-  type: string,
-  size: string,
-  quantity: number
-) {
-  await supabase.from("fuel_transactions").insert({
-    square_customer_id: customerId,
-    order_id: orderId,
-    type,
-    size,
-    quantity,
+  await squareClient.customers.update({
+    customerId: customerId,
+    familyName: display,
   });
-}}
+}

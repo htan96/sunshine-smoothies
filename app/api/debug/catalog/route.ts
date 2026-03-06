@@ -1,20 +1,34 @@
 import { NextResponse } from "next/server";
 import { squareClient } from "@/lib/square/client";
 
-export async function GET() {
-  const response = await squareClient.catalog.list({
-    types: "ITEM",
-  });
-
-  const safe = JSON.parse(
-    JSON.stringify(response, (_, value) =>
+function cleanBigInt(obj: any) {
+  return JSON.parse(
+    JSON.stringify(obj, (_, value) =>
       typeof value === "bigint" ? value.toString() : value
     )
   );
+}
 
-  const objects = safe.response?.objects || [];
+export async function GET() {
+  try {
+    const response: any = await squareClient.catalog.search({
+      objectTypes: ["ITEM"]
+    });
 
-  const names = objects.map((obj: any) => obj.itemData?.name);
+    const cleaned = cleanBigInt(response);
 
-  return NextResponse.json(names);
+    const objects = cleaned.objects || [];
+
+    const items = objects.map((item: any) => ({
+      name: item.itemData?.name,
+      itemId: item.id,
+      variationId: item.itemData?.variations?.[0]?.id
+    }));
+
+    return NextResponse.json(items);
+
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Failed to fetch catalog" });
+  }
 }
