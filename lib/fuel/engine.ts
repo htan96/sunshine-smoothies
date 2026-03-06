@@ -28,6 +28,8 @@ async function recordTransaction(
   size: string,
   quantity: number
 ) {
+  console.log("Recording transaction:", { customerId, orderId, type, size, quantity });
+
   await supabase.from("fuel_transactions").insert({
     square_customer_id: customerId,
     order_id: orderId,
@@ -38,10 +40,20 @@ async function recordTransaction(
 }
 
 export async function handleFuelOrder(order: any) {
+  console.log("Fuel engine received order:", order);
+
   const orderId = order.id;
   const customerId = order.customer_id;
 
-  if (!customerId) return;
+  if (!customerId) {
+    console.log("No customer attached to order. Skipping.");
+    return;
+  }
+
+  if (!order.line_items || order.line_items.length === 0) {
+    console.log("Order has no line items.");
+    return;
+  }
 
   // Prevent duplicate processing
   const { data: existing } = await supabase
@@ -50,7 +62,10 @@ export async function handleFuelOrder(order: any) {
     .eq("order_id", orderId)
     .single();
 
-  if (existing) return;
+  if (existing) {
+    console.log("Order already processed:", orderId);
+    return;
+  }
 
   // Get existing balance
   const { data: existingBalance } = await supabase
@@ -67,9 +82,15 @@ export async function handleFuelOrder(order: any) {
     fuel_jumbo: 0,
   };
 
-  for (const item of order.line_items || []) {
+  console.log("Starting balance:", balance);
+
+  for (const item of order.line_items) {
+    console.log("Processing item:", item);
+
     const variationId = item.catalog_object_id;
     const quantity = Number(item.quantity || 1);
+
+    console.log("Variation ID:", variationId);
 
     // PACK PURCHASES
     if (variationId === PACK_VARIATIONS.MEDIUM) {
@@ -118,6 +139,8 @@ export async function handleFuelOrder(order: any) {
     }
   }
 
+  console.log("Updated balance:", balance);
+
   // Update balance
   await supabase.from("customer_fuel_balances").upsert({
     square_customer_id: customerId,
@@ -136,8 +159,12 @@ export async function handleFuelOrder(order: any) {
   // Update Square customer display
   const display = formatDisplay(balance);
 
+  console.log("Updating Square customer name:", display);
+
   await squareClient.customers.update({
     customerId: customerId,
     familyName: display,
   });
+
+  console.log("Fuel engine finished successfully.");
 }

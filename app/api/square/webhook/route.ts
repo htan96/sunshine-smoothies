@@ -5,20 +5,28 @@ import { squareClient } from "@/lib/square/client";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-console.log("WEBHOOK BODY:", JSON.stringify(body, null, 2));
-    // Only process order updates
+
+    console.log("WEBHOOK BODY:", body);
+
+    // Only process order.updated events
     if (body.type !== "order.updated") {
       return NextResponse.json({ received: true });
     }
 
-    // Correct location of orderId
-    const orderId = body?.data?.object?.order_id;
+    const orderState = body?.data?.object?.order_updated?.state;
+
+    // Ignore updates until order is completed
+    if (orderState !== "COMPLETED") {
+      return NextResponse.json({ received: true });
+    }
+
+    const orderId = body?.data?.id;
 
     if (!orderId) {
       return NextResponse.json({ received: true });
     }
 
-    // Retrieve order
+    // Retrieve full order from Square
     const orderResponse = await squareClient.orders.get(orderId);
 
     const order = orderResponse.order;
