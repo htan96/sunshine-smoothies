@@ -43,14 +43,14 @@ export async function handleFuelOrder(order: any) {
   console.log("Fuel engine received order:", order);
 
   const orderId = order.id;
-  const customerId = order.customer_id;
+  const customerId = order.customerId;
 
   if (!customerId) {
     console.log("No customer attached to order. Skipping.");
     return;
   }
 
-  if (!order.line_items || order.line_items.length === 0) {
+  if (!order.lineItems || order.lineItems.length === 0) {
     console.log("Order has no line items.");
     return;
   }
@@ -84,10 +84,10 @@ export async function handleFuelOrder(order: any) {
 
   console.log("Starting balance:", balance);
 
-  for (const item of order.line_items) {
+  for (const item of order.lineItems) {
     console.log("Processing item:", item);
 
-    const variationId = item.catalog_object_id;
+    const variationId = item.catalogObjectId;
     const quantity = Number(item.quantity || 1);
 
     console.log("Variation ID:", variationId);
