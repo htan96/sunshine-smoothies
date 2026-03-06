@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
 
     console.log("Retrieving order:", orderId);
 
-    const response = await squareClient.orders.get(orderId);
-
+const response = await squareClient.orders.get({
+  orderId: orderId
+});
     const order = response.order;
 
     if (!order) {
