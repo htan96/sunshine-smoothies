@@ -31,7 +31,7 @@ type FuelBalances = {
 };
 
 function getRedemptionItem(items: any[]) {
-  return items.find((item) => REDEEM_VARIATIONS[item.catalogObjectId]);
+  return items.find((item) => REDEEM_VARIATIONS[item.variationId]);
 }
 
 export default function CartDrawer() {
