@@ -10,11 +10,28 @@ function getDefaultPickupTime() {
   return now;
 }
 
-// ✅ Ordering hours check (8AM–4PM)
 function isWithinOrderingHours() {
   const now = new Date();
   const hour = now.getHours();
   return hour >= 8 && hour < 16;
+}
+
+const REDEEM_VARIATIONS: Record<string, "MEDIUM" | "LARGE" | "XL" | "JUMBO"> = {
+  RMILMPJ3UMVOMOH4LFBQDS4H: "MEDIUM",
+  BWJMGIMUZHU3EVPBEKMFMPEB: "LARGE",
+  F7QLDQMENXO4CIOQO6QPHIV5: "XL",
+  "7XQ7EXVJELMIM63UDTLMLAC7": "JUMBO",
+};
+
+type FuelBalances = {
+  medium: number;
+  large: number;
+  xl: number;
+  jumbo: number;
+};
+
+function getRedemptionItem(items: any[]) {
+  return items.find((item) => REDEEM_VARIATIONS[item.catalogObjectId]);
 }
 
 export default function CartDrawer() {
@@ -27,19 +44,31 @@ export default function CartDrawer() {
     getCartTotal,
   } = useCartStore();
 
-  const selectedLocation = useLocationStore(
-    (state) => state.selectedLocation
-  );
+  const selectedLocation = useLocationStore((state) => state.selectedLocation);
 
-  const [pickupDate, setPickupDate] = useState<Date>(
-    getDefaultPickupTime()
-  );
+  const [pickupDate, setPickupDate] = useState<Date>(getDefaultPickupTime());
   const [asap, setAsap] = useState(true);
   const [notes, setNotes] = useState("");
+  const [phone, setPhone] = useState("");
+  const [checkingFuel, setCheckingFuel] = useState(false);
+  const [fuelBalance, setFuelBalance] = useState<number | null>(null);
+  const [fuelBalances, setFuelBalances] = useState<FuelBalances>({
+    medium: 0,
+    large: 0,
+    xl: 0,
+    jumbo: 0,
+  });
 
   const orderingOpen = isWithinOrderingHours();
 
-  // Generate time slots
+  const redemptionItem = getRedemptionItem(items);
+  const redemptionSize = redemptionItem
+    ? REDEEM_VARIATIONS[redemptionItem.catalogObjectId]
+    : null;
+
+  const redemptionQuantity = redemptionItem ? Number(redemptionItem.quantity || 0) : 0;
+  const redemptionInCart = Boolean(redemptionItem);
+
   const timeSlots = useMemo(() => {
     const slots: Date[] = [];
     const base = getDefaultPickupTime();
@@ -54,9 +83,7 @@ export default function CartDrawer() {
   }, []);
 
   const formattedReadyTime = useMemo(() => {
-    const time = asap
-      ? new Date(Date.now() + 20 * 60000)
-      : pickupDate;
+    const time = asap ? new Date(Date.now() + 20 * 60000) : pickupDate;
 
     return time.toLocaleTimeString([], {
       hour: "2-digit",
@@ -64,13 +91,118 @@ export default function CartDrawer() {
     });
   }, [pickupDate, asap]);
 
+  async function checkFuelBalance(currentPhone?: string) {
+    const phoneToCheck = (currentPhone ?? phone).trim();
+
+    if (!phoneToCheck) return null;
+
+    setCheckingFuel(true);
+
+    try {
+      const res = await fetch("/api/fuel/check-balance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: phoneToCheck,
+          size: redemptionSize ?? undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      const balances: FuelBalances = {
+        medium: data?.balances?.medium ?? 0,
+        large: data?.balances?.large ?? 0,
+        xl: data?.balances?.xl ?? 0,
+        jumbo: data?.balances?.jumbo ?? 0,
+      };
+
+      setFuelBalances(balances);
+
+      if (redemptionSize === "MEDIUM") setFuelBalance(balances.medium);
+      if (redemptionSize === "LARGE") setFuelBalance(balances.large);
+      if (redemptionSize === "XL") setFuelBalance(balances.xl);
+      if (redemptionSize === "JUMBO") setFuelBalance(balances.jumbo);
+
+      return data;
+    } catch (error) {
+      console.error("Fuel balance check failed:", error);
+      setFuelBalance(0);
+      setFuelBalances({
+        medium: 0,
+        large: 0,
+        xl: 0,
+        jumbo: 0,
+      });
+      return null;
+    } finally {
+      setCheckingFuel(false);
+    }
+  }
+
+  async function handlePhoneChange(value: string) {
+    setPhone(value);
+
+    const normalized = value.replace(/\D/g, "");
+
+    if (redemptionInCart && normalized.length >= 10) {
+      await checkFuelBalance(value);
+    } else {
+      setFuelBalance(null);
+      setFuelBalances({
+        medium: 0,
+        large: 0,
+        xl: 0,
+        jumbo: 0,
+      });
+    }
+  }
+
   async function handleCheckout() {
     if (!selectedLocation) return;
 
-    // 🚫 Block if outside ordering hours
     if (!orderingOpen) {
       alert("Online ordering is available between 8:00 AM and 4:00 PM.");
       return;
+    }
+
+    if (redemptionInCart) {
+      if (!phone.trim()) {
+        alert("Phone number required for redemption.");
+        return;
+      }
+
+      let data = await checkFuelBalance();
+
+      if (!data) {
+        alert("Unable to verify fuel balance.");
+        return;
+      }
+
+      if (!data.allowed) {
+        alert(data.message || "No drinks remaining.");
+        return;
+      }
+
+      const remaining =
+        redemptionSize === "MEDIUM"
+          ? data.balances?.medium ?? 0
+          : redemptionSize === "LARGE"
+          ? data.balances?.large ?? 0
+          : redemptionSize === "XL"
+          ? data.balances?.xl ?? 0
+          : redemptionSize === "JUMBO"
+          ? data.balances?.jumbo ?? 0
+          : 0;
+
+      if (redemptionQuantity > remaining) {
+        alert(
+          `You only have ${remaining} ${redemptionSize} drinks remaining.`
+        );
+        return;
+      }
     }
 
     const calculatedPickupTime = asap
@@ -85,6 +217,7 @@ export default function CartDrawer() {
         pickupTime: calculatedPickupTime.toISOString(),
         notes,
         locationId: selectedLocation.id,
+        phone,
       }),
     });
 
@@ -99,20 +232,14 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={closeCart}
       />
 
-      {/* Drawer */}
       <div className="relative w-full md:w-[440px] bg-white h-full shadow-2xl flex flex-col animate-slideIn">
-
-        {/* Header */}
         <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">
-            Your Order
-          </h2>
+          <h2 className="text-lg font-semibold tracking-tight">Your Order</h2>
 
           <button
             onClick={closeCart}
@@ -122,25 +249,67 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
-
-          {/* Location */}
           <div>
             <p className="text-xs uppercase tracking-widest text-neutral-400 mb-2">
               Pickup Location
             </p>
+
             <div className="bg-neutral-100 rounded-2xl px-5 py-4">
               <p className="text-sm font-medium text-neutral-800">
                 {selectedLocation?.name}
               </p>
+
               <p className="text-xs text-neutral-500 mt-1">
                 {selectedLocation?.address}
               </p>
             </div>
           </div>
 
-          {/* ASAP Toggle */}
+          {redemptionInCart && (
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-widest text-neutral-400">
+                Phone Number Required for Redemption
+              </p>
+
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => handlePhoneChange(e.target.value)}
+                placeholder="Enter phone number"
+                className="w-full bg-neutral-100 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-300"
+              />
+
+              {phone && (
+                <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-4 space-y-2">
+                  <p className="text-sm font-semibold text-green-900">
+                    Fuel Balance
+                  </p>
+
+                  <div className="flex justify-between text-sm text-green-900">
+                    <span>Medium</span>
+                    <span>{fuelBalances.medium}</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-green-900">
+                    <span>Large</span>
+                    <span>{fuelBalances.large}</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-green-900">
+                    <span>XL</span>
+                    <span>{fuelBalances.xl}</span>
+                  </div>
+
+                  <div className="flex justify-between text-sm text-green-900">
+                    <span>Jumbo</span>
+                    <span>{fuelBalances.jumbo}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-between bg-neutral-100 rounded-2xl px-5 py-4">
             <span className="text-sm font-medium">
               {asap
@@ -162,7 +331,6 @@ export default function CartDrawer() {
             </button>
           </div>
 
-          {/* Time Slot Selector */}
           {!asap && (
             <div className="grid grid-cols-4 gap-2">
               {timeSlots.map((slot, index) => (
@@ -180,7 +348,6 @@ export default function CartDrawer() {
             </div>
           )}
 
-          {/* Notes */}
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -188,7 +355,6 @@ export default function CartDrawer() {
             placeholder="Special instructions..."
           />
 
-          {/* Items */}
           <div className="border-t pt-6 space-y-6">
             {items.map((item) => (
               <div
@@ -197,9 +363,8 @@ export default function CartDrawer() {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="font-medium">
-                      {item.itemName}
-                    </p>
+                    <p className="font-medium">{item.itemName}</p>
+
                     <p className="text-sm text-neutral-500">
                       {item.variationName}
                     </p>
@@ -224,9 +389,7 @@ export default function CartDrawer() {
                       −
                     </button>
 
-                    <span className="px-4 text-sm">
-                      {item.quantity}
-                    </span>
+                    <span className="px-4 text-sm">{item.quantity}</span>
 
                     <button
                       onClick={() =>
@@ -243,8 +406,7 @@ export default function CartDrawer() {
                     {(
                       ((item.basePrice +
                         item.modifiers.reduce(
-                          (sum, m) =>
-                            sum + m.price * m.quantity,
+                          (sum: number, m: any) => sum + m.price * m.quantity,
                           0
                         )) *
                         item.quantity) /
@@ -257,9 +419,7 @@ export default function CartDrawer() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="border-t border-neutral-100 px-6 py-5 bg-white space-y-4">
-
           {!orderingOpen && (
             <p className="text-xs text-red-500 text-center">
               Online ordering is available daily from 8:00 AM to 4:00 PM.
@@ -268,21 +428,30 @@ export default function CartDrawer() {
 
           <div className="flex justify-between text-lg font-semibold">
             <span>Total</span>
-            <span>
-              ${(getCartTotal() / 100).toFixed(2)}
-            </span>
+            <span>${(getCartTotal() / 100).toFixed(2)}</span>
           </div>
 
           <button
             onClick={handleCheckout}
-            disabled={!orderingOpen}
+            disabled={
+              !orderingOpen ||
+              (redemptionInCart && !phone.trim()) ||
+              checkingFuel
+            }
             className={`w-full py-4 rounded-full font-semibold transition ${
-              orderingOpen
+              orderingOpen &&
+              (!redemptionInCart || phone.trim())
                 ? "bg-black text-white hover:opacity-90"
                 : "bg-neutral-300 text-neutral-500 cursor-not-allowed"
             }`}
           >
-            {orderingOpen ? "Checkout" : "Ordering Closed (8AM–4PM)"}
+            {!orderingOpen
+              ? "Ordering Closed (8AM–4PM)"
+              : redemptionInCart && !phone.trim()
+              ? "Enter Phone Number to Redeem"
+              : checkingFuel
+              ? "Checking Balance..."
+              : "Checkout"}
           </button>
         </div>
       </div>
