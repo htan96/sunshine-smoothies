@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { MenuModifierList } from "@/features/menu/types";
 
 type Props = {
@@ -54,6 +55,8 @@ export default function ModifierSection({
   description,
   selectedVariationName,
 }: Props) {
+  const [open, setOpen] = useState(false);
+
   const visibleModifiers = getVisibleModifiers(
     list,
     description,
@@ -63,33 +66,47 @@ export default function ModifierSection({
   if (visibleModifiers.length === 0) return null;
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold mb-4">{list.name}</h2>
+    <div className="border-t pt-6">
 
-      <div className="grid grid-cols-2 gap-3">
-        {visibleModifiers.map((modifier) => {
-          const selected =
-            selectedModifiers[list.id]?.includes(modifier.id);
+      {/* Section Header */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex justify-between items-center text-lg font-semibold mb-4"
+      >
+        {list.name}
+        <span className="text-xl">{open ? "−" : "+"}</span>
+      </button>
 
-          return (
-            <button
-              key={modifier.id}
-              onClick={() => toggleModifier(list, modifier.id)}
-              className={`px-4 py-3 rounded-xl transition flex justify-between items-center ${
-                selected
-                  ? "bg-black text-white"
-                  : "bg-neutral-100 hover:bg-neutral-200"
-              }`}
-            >
-              <span>{modifier.name}</span>
+      {/* Chip Grid */}
+      {open && (
+        <div className="flex flex-wrap gap-3">
+          {visibleModifiers.map((modifier) => {
+            const selected =
+              selectedModifiers[list.id]?.includes(modifier.id);
 
-              {modifier.price > 0 && (
-                <span>+${(modifier.price / 100).toFixed(2)}</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <button
+                key={modifier.id}
+                onClick={() => toggleModifier(list, modifier.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                  selected
+                    ? "bg-black text-white"
+                    : "bg-neutral-200 hover:bg-neutral-300"
+                }`}
+              >
+                {modifier.name}
+
+                {modifier.price > 0 && (
+                  <span className="ml-1 text-xs opacity-80">
+                    +${(modifier.price / 100).toFixed(2)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
     </div>
   );
 }
