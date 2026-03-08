@@ -15,12 +15,14 @@ export default function RootLayout({
 
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "Local Business",
     name: "Sunshine Smoothies",
     url: "https://sunshinesmoothiesvallejo.com",
     logo: "https://sunshinesmoothiesvallejo.com/logo.png",
     sameAs: [
-      "https://www.instagram.com/sunshinesmoothies"
+          "https://www.instagram.com/sunshinesmoothiesandcoffee/",
+          "https://www.yelp.com/biz/sunshine-smoothies-and-coffee-vallejo-2",
+          "https://www.yelp.com/biz/sunshine-smoothies-and-coffee-vallejo"
     ],
     department: [
       {
