@@ -33,11 +33,28 @@ export default function CategoryTabs({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const safeCategories = useMemo(() => {
-    return [...(categories ?? [])].sort(
-      (a, b) =>
-        CATEGORY_ORDER.indexOf(a.name) -
-        CATEGORY_ORDER.indexOf(b.name)
-    );
+    const cats = [...(categories ?? [])];
+
+    return cats.sort((a, b) => {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+
+      const indexA = CATEGORY_ORDER.findIndex(
+        (c) => c.toLowerCase() === nameA
+      );
+      const indexB = CATEGORY_ORDER.findIndex(
+        (c) => c.toLowerCase() === nameB
+      );
+
+      if (indexA === -1 && indexB === -1) {
+        return nameA.localeCompare(nameB);
+      }
+
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+
+      return indexA - indexB;
+    });
   }, [categories]);
 
   const scroll = (dir: "left" | "right") => {
@@ -74,6 +91,7 @@ export default function CategoryTabs({
     <div className="sticky top-[124px] z-30 bg-white">
       <div className="relative border-t border-b border-neutral-200">
 
+        {/* LEFT SCROLL */}
         <button
           type="button"
           onClick={() => scroll("left")}
@@ -82,6 +100,7 @@ export default function CategoryTabs({
           <span className="text-2xl leading-none">‹</span>
         </button>
 
+        {/* CATEGORY SCROLLER */}
         <div
           ref={scrollRef}
           className="no-scrollbar overflow-x-auto scroll-smooth"
@@ -113,6 +132,7 @@ export default function CategoryTabs({
           </div>
         </div>
 
+        {/* RIGHT SCROLL */}
         <button
           type="button"
           onClick={() => scroll("right")}

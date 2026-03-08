@@ -16,13 +16,15 @@ export async function GET() {
     });
 
     const cleaned = cleanBigInt(response);
-
     const objects = cleaned.objects || [];
 
     const items = objects.map((item: any) => ({
       name: item.itemData?.name,
       itemId: item.id,
-      variationId: item.itemData?.variations?.[0]?.id
+      variationId: item.itemData?.variations?.[0]?.id,
+
+      // 👇 THIS IS WHAT WE NEED
+      modifierLists: item.itemData?.modifierListInfo || []
     }));
 
     return NextResponse.json(items);
