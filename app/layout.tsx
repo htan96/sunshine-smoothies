@@ -13,10 +13,97 @@ export default function RootLayout({
 }) {
   const { selectedLocation } = useLocationStore();
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Sunshine Smoothies",
+    url: "https://sunshinesmoothiesvallejo.com",
+    logo: "https://sunshinesmoothiesvallejo.com/logo.png",
+    sameAs: [
+      "https://www.instagram.com/sunshinesmoothies"
+    ],
+    department: [
+      {
+        "@type": "JuiceShop",
+        name: "Sunshine Smoothies – Solano Ave",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "2089 Solano Ave",
+          addressLocality: "Vallejo",
+          addressRegion: "CA",
+          postalCode: "94590",
+          addressCountry: "US"
+        },
+        openingHoursSpecification: {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ],
+          opens: "08:30",
+          closes: "17:30"
+        }
+      },
+      {
+        "@type": "JuiceShop",
+        name: "Sunshine Smoothies – Waterfront Drive-Thru",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "821 Wilson Ave",
+          addressLocality: "Vallejo",
+          addressRegion: "CA",
+          postalCode: "94590",
+          addressCountry: "US"
+        },
+        openingHoursSpecification: [
+          {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: [
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday"
+            ],
+            opens: "07:00",
+            closes: "17:00"
+          },
+          {
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: [
+              "Saturday",
+              "Sunday"
+            ],
+            opens: "08:00",
+            closes: "17:00"
+          }
+        ]
+      }
+    ]
+  };
+
   return (
     <html lang="en">
+      <head>
+        <title>Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo</title>
+        <meta
+          name="description"
+          content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru."
+        />
+
+        {/* Local Business SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      </head>
+
       <body className="bg-white text-neutral-900 antialiased">
-        
         <Header />
 
         <main>{children}</main>
@@ -25,7 +112,6 @@ export default function RootLayout({
 
         {/* Cart Drawer mounted globally */}
         <CartDrawer />
-        
       </body>
     </html>
   );
