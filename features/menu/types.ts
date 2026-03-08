@@ -12,6 +12,7 @@ export type MenuModifier = {
   id: string;
   name: string;
   price: number;
+  image?: string | null;   // ✅ add this
 };
 
 export type MenuModifierList = {

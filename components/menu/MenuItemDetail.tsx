@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
+import ModifierSection from "./ModifierSection";
+
 import type {
   MenuItem,
   MenuVariation,
@@ -19,9 +21,8 @@ export default function MenuItemDetail({ item }: Props) {
   const addItem = useCartStore((state) => state.addItem);
 
   const defaultVariation =
-    item.variations.find(
-      (v) => v.name.toLowerCase() === "medium"
-    ) || item.variations[0];
+    item.variations.find((v) => v.name.toLowerCase() === "medium") ||
+    item.variations[0];
 
   const [selectedVariation, setSelectedVariation] =
     useState<MenuVariation>(defaultVariation);
@@ -107,7 +108,7 @@ export default function MenuItemDetail({ item }: Props) {
       id: nanoid(),
       itemId: item.id,
       itemName: item.name,
-      image: item.image ?? undefined, // FIXED null issue
+      image: item.image ?? undefined,
       variationId: selectedVariation.id,
       variationName: selectedVariation.name,
       basePrice: selectedVariation.price,
@@ -119,7 +120,6 @@ export default function MenuItemDetail({ item }: Props) {
   return (
     <div className="bg-neutral-50 min-h-screen flex flex-col">
       <div className="flex-1 max-w-6xl mx-auto px-6 py-10 pb-44 md:pb-28 w-full">
-
         <button
           onClick={() => {
             if (window.history.length > 1) {
@@ -134,8 +134,6 @@ export default function MenuItemDetail({ item }: Props) {
         </button>
 
         <div className="grid md:grid-cols-2 gap-12 items-start">
-
-          {/* LEFT SIDE */}
           <div className="space-y-6">
             {item.image && (
               <div className="bg-white rounded-2xl p-8 shadow-lg">
@@ -160,19 +158,15 @@ export default function MenuItemDetail({ item }: Props) {
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-10">
-
-            {/* SIZE */}
             <div>
-              <h2 className="text-lg font-semibold mb-4">
-                Size Options
-              </h2>
+              <h2 className="text-lg font-semibold mb-4">Size Options</h2>
 
               <div className="space-y-3">
                 {item.variations.map((variation) => (
                   <button
                     key={variation.id}
+                    type="button"
                     onClick={() => setSelectedVariation(variation)}
                     className={`w-full px-5 py-4 rounded-xl transition flex justify-between items-center ${
                       selectedVariation.id === variation.id
@@ -181,61 +175,31 @@ export default function MenuItemDetail({ item }: Props) {
                     }`}
                   >
                     <span>{variation.name}</span>
-                    <span>
-                      ${(variation.price / 100).toFixed(2)}
-                    </span>
+                    <span>${(variation.price / 100).toFixed(2)}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* MODIFIERS */}
             {item.modifiers.map((list) => (
-              <div key={list.id}>
-                <h2 className="text-lg font-semibold mb-4">
-                  {list.name}
-                </h2>
-
-                <div className="space-y-3">
-                  {list.modifiers.map((modifier) => {
-                    const selected =
-                      selectedModifiers[list.id]?.includes(modifier.id);
-
-                    return (
-                      <button
-                        key={modifier.id}
-                        onClick={() =>
-                          toggleModifier(list, modifier.id)
-                        }
-                        className={`w-full px-5 py-4 rounded-xl transition flex justify-between items-center ${
-                          selected
-                            ? "bg-black text-white"
-                            : "bg-neutral-100 hover:bg-neutral-200"
-                        }`}
-                      >
-                        <span>{modifier.name}</span>
-                        {modifier.price > 0 && (
-                          <span>
-                            +$
-                            {(modifier.price / 100).toFixed(2)}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <ModifierSection
+  key={`${list.id}-${selectedVariation.name}`}
+  list={list}
+  selectedModifiers={selectedModifiers}
+  toggleModifier={toggleModifier}
+  selectedVariationName={selectedVariation.name}
+  itemDescription={item.description}
+/>
             ))}
           </div>
         </div>
       </div>
 
-      {/* FIXED CTA */}
       <div className="fixed bottom-16 md:bottom-0 left-0 w-full bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.06)] z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-
           <div className="flex items-center gap-4">
             <button
+              type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               className="px-4 py-2 bg-neutral-200 rounded-lg"
             >
@@ -245,6 +209,7 @@ export default function MenuItemDetail({ item }: Props) {
             <span className="text-lg font-semibold">{quantity}</span>
 
             <button
+              type="button"
               onClick={() => setQuantity((q) => q + 1)}
               className="px-4 py-2 bg-neutral-200 rounded-lg"
             >
@@ -257,12 +222,12 @@ export default function MenuItemDetail({ item }: Props) {
           </div>
 
           <button
+            type="button"
             onClick={handleAddToCart}
             className="bg-black text-white px-8 py-3 rounded-full text-lg font-semibold hover:opacity-90 transition"
           >
             Add to Order
           </button>
-
         </div>
       </div>
     </div>

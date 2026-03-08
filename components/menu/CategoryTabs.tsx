@@ -17,7 +17,7 @@ const CATEGORY_ORDER = [
   "Shots",
   "XSB Seamoss",
   "Bagel",
-  "Sandwich",
+  "Sandwich ",
   "Wrap",
   "Salad",
   "Fruit & Snacks",
