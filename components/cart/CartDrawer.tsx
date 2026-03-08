@@ -104,13 +104,13 @@ export default function CartDrawer() {
 
     const digits = phoneToCheck.replace(/\D/g, "");
 
-    if (digits.length < 10) return null;
+if (digits.length < 10) return null;
 
-    if (lastCheckedPhone === digits) {
-      return null;
-    }
+if (lastCheckedPhone && lastCheckedPhone === digits) {
+  return null;
+}
 
-    setLastCheckedPhone(digits);
+setLastCheckedPhone(digits);
     setCheckingFuel(true);
 
     try {
@@ -159,26 +159,29 @@ export default function CartDrawer() {
     }
   }
 
-  async function handlePhoneChange(value: string) {
-    setPhone(value);
+async function handlePhoneChange(value: string) {
+  setPhone(value);
 
-    const digits = value.replace(/\D/g, "");
+  const digits = value.replace(/\D/g, "");
 
-    if (!redemptionInCart) return;
+  if (!redemptionInCart) return;
 
-    if (digits.length >= 10) {
+  if (digits.length >= 10) {
+    if (digits !== lastCheckedPhone) {
       await checkFuelBalance(value);
-    } else {
-      setFuelBalance(null);
-      setFuelBalances({
-        medium: 0,
-        large: 0,
-        xl: 0,
-        jumbo: 0,
-      });
-      setLastCheckedPhone(null);
     }
+  } else {
+    setFuelBalance(null);
+    setFuelBalances({
+      medium: 0,
+      large: 0,
+      xl: 0,
+      jumbo: 0,
+    });
+
+    setLastCheckedPhone(null);
   }
+}
 
   async function handleCheckout() {
     if (!selectedLocation) return;

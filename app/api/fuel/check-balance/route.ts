@@ -4,6 +4,24 @@ import { squareClient } from "@/lib/square/client";
 
 type FuelSize = "MEDIUM" | "LARGE" | "XL" | "JUMBO";
 
+function normalizePhone(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+
+  if (digits.startsWith("+")) {
+    return phone;
+  }
+
+  return `+${digits}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { phone, size } = (await req.json()) as {
@@ -18,7 +36,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const normalizedPhone = phone.replace(/\D/g, "");
+    const normalizedPhone = normalizePhone(phone);
 
     const searchResponse = await squareClient.customers.search({
       query: {
