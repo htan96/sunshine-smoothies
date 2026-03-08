@@ -14,36 +14,41 @@ export default function Hero() {
       {/* Content */}
       <div className="relative z-10 flex h-full items-center justify-center text-center px-6">
         <div>
+
+          {/* SEO Optimized H1 */}
           <h1 className="text-5xl md:text-6xl font-bold text-white leading-tight">
-            Fresh smoothies.
+            Fresh Smoothies & Juice Bar
             <br />
-            Real ingredients.
+            in Vallejo
           </h1>
 
+          {/* Supporting description */}
           <p className="mt-6 text-lg text-gray-200">
-            Made fresh daily for the community.
+            Made fresh daily with real ingredients at Sunshine Smoothies & Coffee.
+            Visit our Solano Avenue storefront or Waterfront drive-thru.
           </p>
 
           <div className="mt-8 flex justify-center gap-6 flex-wrap">
 
-  <a
-    href="/location"
-    className="rounded-full bg-yellow-400 px-8 py-3 font-semibold text-black hover:bg-yellow-500 transition"
-  >
-    View Locations
-  </a>
+            <a
+              href="/location"
+              className="rounded-full bg-yellow-400 px-8 py-3 font-semibold text-black hover:bg-yellow-500 transition"
+            >
+              View Locations
+            </a>
 
-  <a
-    href="/menu"
-    className="rounded-full border border-white px-8 py-3 font-semibold text-white hover:bg-white hover:text-black transition"
-  >
-    Explore Menu
-  </a>
+            <a
+              href="/menu"
+              className="rounded-full border border-white px-8 py-3 font-semibold text-white hover:bg-white hover:text-black transition"
+            >
+              Explore Menu
+            </a>
 
-</div>
+          </div>
 
         </div>
       </div>
+
     </section>
   );
 }
