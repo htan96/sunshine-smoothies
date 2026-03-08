@@ -92,18 +92,25 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo</title>
-        <meta
-          name="description"
-          content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru."
-        />
+  <title>Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo</title>
 
-        {/* Local Business SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
-      </head>
+  <meta
+    name="description"
+    content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru."
+  />
+
+  {/* Favicons */}
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  {/* Local Business SEO */}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+  />
+</head>
 
       <body className="bg-white text-neutral-900 antialiased">
         <Header />
