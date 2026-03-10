@@ -58,7 +58,6 @@ function normalizePhone(phone?: string | null) {
 
 async function getCustomerPhone(customerId: string) {
   try {
-
     const response = await squareClient.customers.get({
       customerId,
     });
@@ -73,12 +72,9 @@ async function getCustomerPhone(customerId: string) {
     });
 
     return normalizedPhone;
-
   } catch (error) {
-
     console.error("Failed to fetch Square customer phone:", error);
     return null;
-
   }
 }
 
@@ -94,7 +90,6 @@ async function recordTransaction(
   size: string,
   quantity: number
 ) {
-
   console.log("Recording transaction:", {
     phone,
     customerId,
@@ -126,11 +121,35 @@ async function recordTransaction(
 /* -------------------------------- */
 
 export async function handleFuelOrder(order: any) {
-
   console.log("Fuel engine received order:", order);
 
   const orderId = order.id;
   const customerId = order.customerId;
+
+  if (!orderId) {
+    console.log("Order has no id. Skipping.");
+    return;
+  }
+
+  /* -------------------------------- */
+  /* Prevent Double Processing        */
+  /* -------------------------------- */
+
+  const { data: existingTransactions, error: existingError } = await supabase
+    .from("fuel_transactions")
+    .select("order_id")
+    .eq("order_id", orderId)
+    .limit(1);
+
+  if (existingError) {
+    console.error("Failed checking existing transactions:", existingError);
+    throw existingError;
+  }
+
+  if (existingTransactions && existingTransactions.length > 0) {
+    console.log("Order already processed. Skipping:", orderId);
+    return;
+  }
 
   if (!customerId) {
     console.log("No customer attached to order. Skipping.");
@@ -153,11 +172,16 @@ export async function handleFuelOrder(order: any) {
   /* Fetch Existing Balance           */
   /* -------------------------------- */
 
-  const { data: existingBalance } = await supabase
+  const { data: existingBalance, error: balanceFetchError } = await supabase
     .from("customer_fuel_balances")
     .select("*")
     .eq("phone", phone)
     .maybeSingle();
+
+  if (balanceFetchError) {
+    console.error("Failed fetching customer_fuel_balances:", balanceFetchError);
+    throw balanceFetchError;
+  }
 
   let balance = existingBalance || {
     phone,
@@ -177,7 +201,6 @@ export async function handleFuelOrder(order: any) {
   /* -------------------------------- */
 
   for (const item of order.lineItems) {
-
     const variationId = item.catalogObjectId;
     const quantity = Number(item.quantity || 1);
 
@@ -186,7 +209,6 @@ export async function handleFuelOrder(order: any) {
     /* ---------- PACK PURCHASES ---------- */
 
     if (variationId === PACK_VARIATIONS.MEDIUM) {
-
       const credits = 8 * quantity;
       balance.fuel_medium += credits;
 
@@ -198,11 +220,7 @@ export async function handleFuelOrder(order: any) {
         "MEDIUM",
         credits
       );
-
-    }
-
-    else if (variationId === PACK_VARIATIONS.LARGE) {
-
+    } else if (variationId === PACK_VARIATIONS.LARGE) {
       const credits = 8 * quantity;
       balance.fuel_large += credits;
 
@@ -214,11 +232,7 @@ export async function handleFuelOrder(order: any) {
         "LARGE",
         credits
       );
-
-    }
-
-    else if (variationId === PACK_VARIATIONS.XL) {
-
+    } else if (variationId === PACK_VARIATIONS.XL) {
       const credits = 8 * quantity;
       balance.fuel_xl += credits;
 
@@ -230,11 +244,7 @@ export async function handleFuelOrder(order: any) {
         "XL",
         credits
       );
-
-    }
-
-    else if (variationId === PACK_VARIATIONS.JUMBO) {
-
+    } else if (variationId === PACK_VARIATIONS.JUMBO) {
       const credits = 8 * quantity;
       balance.fuel_jumbo += credits;
 
@@ -246,15 +256,12 @@ export async function handleFuelOrder(order: any) {
         "JUMBO",
         credits
       );
-
     }
 
     /* ---------- REDEMPTIONS ---------- */
 
     else if (variationId === REDEEM_VARIATIONS.MEDIUM) {
-
       if (balance.fuel_medium >= quantity) {
-
         balance.fuel_medium -= quantity;
 
         await recordTransaction(
@@ -265,24 +272,16 @@ export async function handleFuelOrder(order: any) {
           "MEDIUM",
           quantity
         );
-
       } else {
-
         console.log("Redemption skipped (insufficient balance)", {
           phone,
           size: "MEDIUM",
           balance: balance.fuel_medium,
           attempted: quantity,
         });
-
       }
-
-    }
-
-    else if (variationId === REDEEM_VARIATIONS.LARGE) {
-
+    } else if (variationId === REDEEM_VARIATIONS.LARGE) {
       if (balance.fuel_large >= quantity) {
-
         balance.fuel_large -= quantity;
 
         await recordTransaction(
@@ -293,24 +292,16 @@ export async function handleFuelOrder(order: any) {
           "LARGE",
           quantity
         );
-
       } else {
-
         console.log("Redemption skipped (insufficient balance)", {
           phone,
           size: "LARGE",
           balance: balance.fuel_large,
           attempted: quantity,
         });
-
       }
-
-    }
-
-    else if (variationId === REDEEM_VARIATIONS.XL) {
-
+    } else if (variationId === REDEEM_VARIATIONS.XL) {
       if (balance.fuel_xl >= quantity) {
-
         balance.fuel_xl -= quantity;
 
         await recordTransaction(
@@ -321,24 +312,16 @@ export async function handleFuelOrder(order: any) {
           "XL",
           quantity
         );
-
       } else {
-
         console.log("Redemption skipped (insufficient balance)", {
           phone,
           size: "XL",
           balance: balance.fuel_xl,
           attempted: quantity,
         });
-
       }
-
-    }
-
-    else if (variationId === REDEEM_VARIATIONS.JUMBO) {
-
+    } else if (variationId === REDEEM_VARIATIONS.JUMBO) {
       if (balance.fuel_jumbo >= quantity) {
-
         balance.fuel_jumbo -= quantity;
 
         await recordTransaction(
@@ -349,20 +332,15 @@ export async function handleFuelOrder(order: any) {
           "JUMBO",
           quantity
         );
-
       } else {
-
         console.log("Redemption skipped (insufficient balance)", {
           phone,
           size: "JUMBO",
           balance: balance.fuel_jumbo,
           attempted: quantity,
         });
-
       }
-
     }
-
   }
 
   console.log("Updated balance:", balance);
@@ -400,16 +378,12 @@ export async function handleFuelOrder(order: any) {
   console.log("Updating Square customer name:", display);
 
   try {
-
     await squareClient.customers.update({
       customerId,
       familyName: display,
     });
-
   } catch (error) {
-
     console.error("Failed updating Square customer display:", error);
-
   }
 
   console.log("Fuel engine finished successfully.");
