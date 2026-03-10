@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     /* Basic Validation                 */
     /* -------------------------------- */
 
-    if (!items?.length) {
+    if (!items || items.length === 0) {
       return NextResponse.json(
         { error: "Cart is empty" },
         { status: 400 }
@@ -70,13 +70,28 @@ export async function POST(req: Request) {
     /* Detect Packs + Redemption        */
     /* -------------------------------- */
 
-    const redemptionInCart = items.some((item:any) =>
+    const redemptionItem = items.find((item:any) =>
       Object.values(REDEEM_VARIATIONS).includes(item.variationId)
     );
 
-    const fuelPackInCart = items.some((item:any) =>
+    const packItem = items.find((item:any) =>
       Object.values(PACK_VARIATIONS).includes(item.variationId)
     );
+
+    const redemptionInCart = Boolean(redemptionItem);
+    const fuelPackInCart = Boolean(packItem);
+
+    const redemptionSize = redemptionItem
+      ? Object.entries(REDEEM_VARIATIONS).find(
+          ([, id]) => id === redemptionItem.variationId
+        )?.[0]
+      : null;
+
+    const packSize = packItem
+      ? Object.entries(PACK_VARIATIONS).find(
+          ([, id]) => id === packItem.variationId
+        )?.[0]
+      : null;
 
     const phoneRequired = redemptionInCart || fuelPackInCart;
 
@@ -88,13 +103,34 @@ export async function POST(req: Request) {
     }
 
     /* -------------------------------- */
-    /* Build Line Items                 */
+    /* Validate Pack + Redemption Size  */
     /* -------------------------------- */
 
-    const lineItems = items.map((item:any) => ({
-      quantity: String(item.quantity),
-      catalogObjectId: item.variationId
-    }));
+    if (fuelPackInCart && redemptionInCart && packSize !== redemptionSize) {
+      return NextResponse.json(
+        { error: "Pack size must match redemption size." },
+        { status: 400 }
+      );
+    }
+
+    /* -------------------------------- */
+    /* Build Square Line Items          */
+    /* -------------------------------- */
+
+    const lineItems = items
+      .filter((item:any) => item.quantity > 0)
+      .map((item:any) => ({
+        quantity: String(item.quantity),
+        catalogObjectId: item.variationId
+      }));
+
+    if (!lineItems.length) {
+      console.error("No valid line items");
+      return NextResponse.json(
+        { error: "Invalid cart items" },
+        { status: 400 }
+      );
+    }
 
     console.log("SQUARE LINE ITEMS:", lineItems);
 
@@ -106,11 +142,42 @@ export async function POST(req: Request) {
 
     if (!customerId && phone) {
 
-      const customerResponse = await squareClient.customers.create({
-        phoneNumber: `+1${phone}`,
-      });
+      try {
 
-      customerId = customerResponse.customer?.id ?? null;
+        const customerResponse = await squareClient.customers.search({
+          query: {
+            filter: {
+              phoneNumber: {
+                exact: `+1${phone}`
+              }
+            }
+          }
+        });
+
+        const existingCustomer =
+          customerResponse.customers?.[0];
+
+        if (existingCustomer) {
+
+          customerId = existingCustomer.id;
+
+        } else {
+
+          const newCustomer =
+            await squareClient.customers.create({
+              phoneNumber: `+1${phone}`,
+            });
+
+          customerId = newCustomer.customer?.id ?? null;
+
+        }
+
+      } catch (err) {
+
+        console.error("Customer lookup failed:", err);
+
+      }
+
     }
 
     /* -------------------------------- */
@@ -136,7 +203,10 @@ export async function POST(req: Request) {
             fuel_phone: phone || "",
             fuel_pack: fuelPackInCart ? "true" : "false",
             fuel_redeem: redemptionInCart ? "true" : "false",
-            pickup_time: pickupTime || ""
+            pack_size: packSize || "",
+            redemption_size: redemptionSize || "",
+            pickup_time: pickupTime || "",
+            notes: notes || ""
           },
 
           pricingOptions: {
@@ -147,7 +217,10 @@ export async function POST(req: Request) {
         },
 
         checkoutOptions: {
-          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+
+          redirectUrl:
+            `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+
         }
 
       });

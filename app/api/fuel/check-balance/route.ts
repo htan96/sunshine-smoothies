@@ -7,23 +7,16 @@ type FuelSize = "MEDIUM" | "LARGE" | "XL" | "JUMBO";
 function normalizePhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
 
-  if (digits.length === 10) {
-    return `+1${digits}`;
-  }
-
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
-  if (phone.startsWith("+")) {
-    return phone;
-  }
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  if (phone.startsWith("+")) return phone;
 
   return `+${digits}`;
 }
 
 export async function POST(req: NextRequest) {
   try {
+
     const { phone, size } = (await req.json()) as {
       phone: string;
       size?: FuelSize;
@@ -38,7 +31,10 @@ export async function POST(req: NextRequest) {
 
     const normalizedPhone = normalizePhone(phone);
 
-    // Search Square customer
+    /* -------------------------------- */
+    /* Search Square Customer           */
+    /* -------------------------------- */
+
     const searchResponse = await squareClient.customers.search({
       query: {
         filter: {
@@ -53,8 +49,7 @@ export async function POST(req: NextRequest) {
 
     if (!customer) {
       return NextResponse.json({
-        allowed: false,
-        message: "Customer not found",
+        allowed: true,
         balances: {
           medium: 0,
           large: 0,
@@ -64,17 +59,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Lookup wallet by phone
-    const { data: balance, error } = await supabase
+    /* -------------------------------- */
+    /* Fetch Fuel Balance               */
+    /* -------------------------------- */
+
+    const { data: balance } = await supabase
       .from("customer_fuel_balances")
       .select("*")
       .eq("phone", normalizedPhone)
-      .single();
+      .maybeSingle();
 
-    if (error || !balance) {
+    if (!balance) {
       return NextResponse.json({
-        allowed: false,
-        message: "No fuel balance found",
+        allowed: true,
         squareCustomerId: customer.id,
         phone: normalizedPhone,
         balances: {
@@ -93,7 +90,10 @@ export async function POST(req: NextRequest) {
       jumbo: balance.fuel_jumbo ?? 0,
     };
 
-    // If only checking balance
+    /* -------------------------------- */
+    /* Just Checking Balance            */
+    /* -------------------------------- */
+
     if (!size) {
       return NextResponse.json({
         allowed: true,
@@ -103,6 +103,10 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    /* -------------------------------- */
+    /* Redemption Check                 */
+    /* -------------------------------- */
+
     const sizeMap: Record<FuelSize, number> = {
       MEDIUM: balances.medium,
       LARGE: balances.large,
@@ -111,6 +115,7 @@ export async function POST(req: NextRequest) {
     };
 
     const remaining = sizeMap[size];
+    const remainingAfterOrder = remaining - 1;
 
     if (remaining <= 0) {
       return NextResponse.json({
@@ -126,12 +131,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       allowed: true,
       remaining,
+      remainingAfterOrder,
       squareCustomerId: customer.id,
       phone: normalizedPhone,
       balances,
     });
 
   } catch (error) {
+
     console.error("Fuel balance check failed:", error);
 
     return NextResponse.json(
@@ -147,5 +154,6 @@ export async function POST(req: NextRequest) {
       },
       { status: 500 }
     );
+
   }
 }
