@@ -1,12 +1,20 @@
 "use client";
 
 import { FaInstagram, FaTiktok, FaYelp } from "react-icons/fa";
+/* -------------------------------- */
+/* Social Links                     */
+/* -------------------------------- */
+
+const SOCIAL_LINKS = {
+  instagram: "https://www.instagram.com/sunshinesmoothiesandcoffee/",
+  tiktok: "https://www.tiktok.com/@sunshine.smoothies",
+  yelp: "https://www.yelp.com/biz/sunshine-smoothies-and-coffee-vallejo-2",
+};
 
 export default function SocialSection() {
   return (
     <section className="relative bg-black text-white py-28">
       
-      {/* Top subtle divider */}
       <div className="absolute top-0 left-0 w-full h-px bg-white/10" />
 
       <div className="relative max-w-5xl mx-auto px-6 text-center">
@@ -26,8 +34,9 @@ export default function SocialSection() {
 
           {/* Instagram */}
           <a
-            href="#"
+            href={SOCIAL_LINKS.instagram}
             target="_blank"
+            rel="noopener noreferrer"
             className="flex flex-col items-center gap-4 group"
           >
             <div className="w-20 h-20 flex items-center justify-center rounded-full border border-white/20 text-3xl transition duration-300 group-hover:bg-yellow-400 group-hover:text-black">
@@ -40,8 +49,9 @@ export default function SocialSection() {
 
           {/* TikTok */}
           <a
-            href="#"
+            href={SOCIAL_LINKS.tiktok}
             target="_blank"
+            rel="noopener noreferrer"
             className="flex flex-col items-center gap-4 group"
           >
             <div className="w-20 h-20 flex items-center justify-center rounded-full border border-white/20 text-3xl transition duration-300 group-hover:bg-yellow-400 group-hover:text-black">
@@ -54,8 +64,9 @@ export default function SocialSection() {
 
           {/* Yelp */}
           <a
-            href="#"
+            href={SOCIAL_LINKS.yelp}
             target="_blank"
+            rel="noopener noreferrer"
             className="flex flex-col items-center gap-4 group"
           >
             <div className="w-20 h-20 flex items-center justify-center rounded-full border border-white/20 text-3xl transition duration-300 group-hover:bg-yellow-400 group-hover:text-black">
