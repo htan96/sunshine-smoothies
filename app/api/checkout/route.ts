@@ -100,14 +100,23 @@ export async function POST(req: Request) {
     /* Build Line Items                 */
     /* -------------------------------- */
 
-    const lineItems = items.map((item: any) => ({
-      quantity: String(item.quantity),
-      catalogObjectId: item.variationId,
-      modifiers:
-        item.modifiers?.map((mod: any) => ({
-          catalogObjectId: mod.modifierId,
-        })) || [],
-    }));
+    const lineItems = items
+  .filter((item: any) => item.quantity && item.quantity > 0 && item.variationId)
+  .map((item: any) => ({
+    quantity: String(item.quantity),
+    catalogObjectId: item.variationId,
+    modifiers:
+      item.modifiers?.map((mod: any) => ({
+        catalogObjectId: mod.modifierId,
+      })) || [],
+  }));
+
+if (!lineItems.length) {
+  return NextResponse.json(
+    { error: "No valid items in cart" },
+    { status: 400 }
+  );
+}
 
     /* -------------------------------- */
     /* Pickup Fulfillment               */
