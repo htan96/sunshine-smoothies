@@ -256,11 +256,47 @@ export default function CartDrawer() {
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onBlur={checkFuelBalance}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setPhone(value);
+
+                  if (redemptionInCart && value.length === 10) {
+                    checkFuelBalance();
+                  }
+                }}
                 placeholder="Enter phone number"
                 className="w-full bg-neutral-100 rounded-xl px-4 py-3"
               />
+            </div>
+          )}
+
+          {/* FUEL BALANCES */}
+
+          {redemptionInCart && phone && (
+            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 space-y-2">
+              <p className="text-sm font-semibold text-green-900">
+                Fuel Balance
+              </p>
+
+              <div className="flex justify-between text-sm">
+                <span>Medium</span>
+                <span>{fuelBalances.medium}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span>Large</span>
+                <span>{fuelBalances.large}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span>XL</span>
+                <span>{fuelBalances.xl}</span>
+              </div>
+
+              <div className="flex justify-between text-sm">
+                <span>Jumbo</span>
+                <span>{fuelBalances.jumbo}</span>
+              </div>
             </div>
           )}
 
