@@ -1,7 +1,7 @@
-// features/menu/useMenu.ts
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocationStore } from "@/features/location/store";
 import type { MenuCategory, MenuItem, MenuResponse } from "./types";
 
@@ -9,6 +9,9 @@ export function useMenu() {
   const selectedLocation = useLocationStore(
     (state) => state.selectedLocation
   );
+
+  const searchParams = useSearchParams();
+  const categoryParam = searchParams.get("category");
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
@@ -29,13 +32,13 @@ export function useMenu() {
     let mounted = true;
 
     async function fetchMenu() {
-        try {
-          setLoading(true);
+      try {
+        setLoading(true);
 
-  const res = await fetch(
-    `/api/square/catalog?location=${locationId}`,
-    { cache: "no-store" }
-  );
+        const res = await fetch(
+          `/api/square/catalog?location=${locationId}`,
+          { cache: "no-store" }
+        );
 
         const data =
           (await res.json()) as MenuResponse | { error?: string };
@@ -54,13 +57,34 @@ export function useMenu() {
           return;
         }
 
-        setItems(data.items ?? []);
-        setCategories(data.categories ?? []);
+        const fetchedItems = data.items ?? [];
+        const fetchedCategories = data.categories ?? [];
 
-        if ((data.categories?.length ?? 0) > 0) {
-          setActiveCategory(
-            (prev) => prev ?? data.categories[0].id
-          );
+        setItems(fetchedItems);
+        setCategories(fetchedCategories);
+
+        if (fetchedCategories.length > 0) {
+
+          // If URL specifies category
+          if (categoryParam) {
+            const match = fetchedCategories.find(
+              (c) =>
+                c.name.toLowerCase().replace(/\s+/g, "-") ===
+                categoryParam.toLowerCase()
+            );
+
+            if (match) {
+              setActiveCategory(match.id);
+            } else {
+              setActiveCategory(fetchedCategories[0].id);
+            }
+
+          } else {
+            setActiveCategory(
+              (prev) => prev ?? fetchedCategories[0].id
+            );
+          }
+
         } else {
           setActiveCategory(null);
         }
@@ -82,10 +106,11 @@ export function useMenu() {
       mounted = false;
     };
 
-  }, [selectedLocation?.id]);
+  }, [selectedLocation?.id, categoryParam]);
 
   const filteredItems = useMemo(() => {
     if (!activeCategory) return [];
+
     return items.filter(
       (i) => i.categoryId === activeCategory
     );
