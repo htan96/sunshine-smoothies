@@ -200,13 +200,13 @@ export async function POST(req: Request) {
           }),
 
           metadata: {
-            fuel_phone: phone || "",
+            fuel_phone: phone ? String(phone) : "",
             fuel_pack: fuelPackInCart ? "true" : "false",
             fuel_redeem: redemptionInCart ? "true" : "false",
-            pack_size: packSize || "",
-            redemption_size: redemptionSize || "",
-            pickup_time: pickupTime || "",
-            notes: notes || ""
+            pack_size: packSize ? String(packSize) : "",
+            redemption_size: redemptionSize ? String(redemptionSize) : "",
+            pickup_time: pickupTime ? String(pickupTime) : "",
+            notes: notes ? String(notes) : ""
           },
 
           pricingOptions: {
