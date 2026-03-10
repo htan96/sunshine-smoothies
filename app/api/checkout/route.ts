@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import {
-  SquareClient,
-  FulfillmentType,
-  FulfillmentState,
-  FulfillmentPickupDetailsScheduleType,
-} from "square";
+import { SquareClient } from "square";
 
 /* -------------------------------- */
 /* Square Client                    */
@@ -39,7 +34,9 @@ const REDEEM_VARIATIONS = {
 
 export async function POST(req: Request) {
   try {
+
     const body = await req.json();
+
     console.log("CHECKOUT BODY:", body);
 
     const {
@@ -47,10 +44,10 @@ export async function POST(req: Request) {
       pickupTime,
       notes,
       locationId,
-      squareCustomerId,
       phone,
+      squareCustomerId
     } = body;
-console.log("CHECKOUT ITEMS:", items);
+
     /* -------------------------------- */
     /* Basic Validation                 */
     /* -------------------------------- */
@@ -73,11 +70,11 @@ console.log("CHECKOUT ITEMS:", items);
     /* Detect Packs + Redemption        */
     /* -------------------------------- */
 
-    const redemptionInCart = items.some((item: any) =>
+    const redemptionInCart = items.some((item:any) =>
       Object.values(REDEEM_VARIATIONS).includes(item.variationId)
     );
 
-    const fuelPackInCart = items.some((item: any) =>
+    const fuelPackInCart = items.some((item:any) =>
       Object.values(PACK_VARIATIONS).includes(item.variationId)
     );
 
@@ -90,86 +87,30 @@ console.log("CHECKOUT ITEMS:", items);
       );
     }
 
-    if (redemptionInCart && !squareCustomerId) {
-      return NextResponse.json(
-        { error: "Customer verification required for redemption" },
-        { status: 400 }
-      );
-    }
-
     /* -------------------------------- */
     /* Build Line Items                 */
     /* -------------------------------- */
 
-    const lineItems = items.map((item: any) => ({
-  quantity: String(item.quantity),
-  catalogObjectId: item.variationId,
-}));
+    const lineItems = items.map((item:any) => ({
+      quantity: String(item.quantity),
+      catalogObjectId: item.variationId
+    }));
 
-console.log("SQUARE LINE ITEMS:", lineItems);
-
-if (!lineItems.length) {
-  return NextResponse.json(
-    { error: "No valid items in cart" },
-    { status: 400 }
-  );
-}
+    console.log("SQUARE LINE ITEMS:", lineItems);
 
     /* -------------------------------- */
-    /* Pickup Fulfillment               */
+    /* Ensure Square Customer           */
     /* -------------------------------- */
 
-    const fulfillments = [
-      {
-        type: FulfillmentType.Pickup,
-        state: FulfillmentState.Proposed,
-        pickupDetails: {
-          scheduleType:
-            FulfillmentPickupDetailsScheduleType.Scheduled,
-          pickupAt: pickupTime,
-          note: notes || "",
-          recipient: {
-            displayName: "Pickup Customer",
-          },
-        },
-      },
-    ];
+    let customerId = squareCustomerId;
 
-    /* -------------------------------- */
-    /* Create Square Order              */
-    /* -------------------------------- */
+    if (!customerId && phone) {
 
-    const orderResponse = await squareClient.orders.create({
-      idempotencyKey: randomUUID(),
+      const customerResponse = await squareClient.customers.create({
+        phoneNumber: `+1${phone}`,
+      });
 
-      order: {
-        locationId,
-
-        ...(squareCustomerId && {
-          customerId: squareCustomerId,
-        }),
-
-        lineItems,
-
-        fulfillments,
-
-        metadata: {
-          fuel_phone: phone || "",
-          fuel_pack: fuelPackInCart ? "true" : "false",
-          fuel_redeem: redemptionInCart ? "true" : "false",
-        },
-
-        pricingOptions: {
-          autoApplyTaxes: true,
-          autoApplyDiscounts: true,
-        },
-      },
-    });
-
-    const createdOrder = orderResponse.order;
-
-    if (!createdOrder?.id) {
-      throw new Error("Order creation failed");
+      customerId = customerResponse.customer?.id ?? null;
     }
 
     /* -------------------------------- */
@@ -178,26 +119,46 @@ if (!lineItems.length) {
 
     const paymentLinkResponse =
       await squareClient.checkout.paymentLinks.create({
+
         idempotencyKey: randomUUID(),
 
         order: {
-          id: createdOrder.id,
-          locationId,
+
+          locationId: locationId,
+
+          lineItems: lineItems,
+
+          ...(customerId && {
+            customerId: customerId
+          }),
+
+          metadata: {
+            fuel_phone: phone || "",
+            fuel_pack: fuelPackInCart ? "true" : "false",
+            fuel_redeem: redemptionInCart ? "true" : "false",
+            pickup_time: pickupTime || ""
+          },
+
+          pricingOptions: {
+            autoApplyTaxes: true,
+            autoApplyDiscounts: true
+          }
+
         },
 
         checkoutOptions: {
           redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-        },
+        }
+
       });
 
     const paymentLink = paymentLinkResponse.paymentLink;
 
     return NextResponse.json({
-      url: paymentLink?.url,
-      orderId: createdOrder.id,
+      url: paymentLink?.url
     });
 
-  } catch (error: any) {
+  } catch (error:any) {
 
     console.error("Checkout error:", error);
 
@@ -205,5 +166,6 @@ if (!lineItems.length) {
       { error: "Checkout failed" },
       { status: 500 }
     );
+
   }
 }
