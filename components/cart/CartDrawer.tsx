@@ -16,10 +16,17 @@ function getDefaultPickupTime() {
   return now;
 }
 
+const TEST_MODE = true;
+
+const ORDER_START_HOUR = 8;
+const ORDER_END_HOUR = 18;
+
 function isWithinOrderingHours() {
+  if (TEST_MODE) return true;
+
   const now = new Date();
   const hour = now.getHours();
-  return hour >= 8 && hour < 18;
+  return hour >= ORDER_START_HOUR && hour < ORDER_END_HOUR;
 }
 
 const REDEEM_VARIATIONS: Record<
