@@ -14,7 +14,15 @@ const squareClient = new SquareClient({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { items, pickupTime, notes, locationId } = body;
+
+    const {
+      items,
+      pickupTime,
+      notes,
+      locationId,
+      squareCustomerId,
+      phone
+    } = body;
 
     if (!items?.length) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -22,6 +30,10 @@ export async function POST(req: Request) {
 
     if (!locationId) {
       return NextResponse.json({ error: "Missing location ID" }, { status: 400 });
+    }
+
+    if (!squareCustomerId) {
+      return NextResponse.json({ error: "Customer verification required" }, { status: 400 });
     }
 
     const lineItems = items.map((item: any) => ({
@@ -48,13 +60,17 @@ export async function POST(req: Request) {
       },
     ];
 
-    // ✅ STEP 1 — Create order (forces tax calculation)
+    // Create order locked to verified customer
     const orderResponse = await squareClient.orders.create({
       idempotencyKey: randomUUID(),
       order: {
         locationId,
+        customerId: squareCustomerId,
         lineItems,
         fulfillments,
+        metadata: {
+          fuel_phone: phone,
+        },
         pricingOptions: {
           autoApplyTaxes: true,
           autoApplyDiscounts: true,
@@ -68,26 +84,20 @@ export async function POST(req: Request) {
       throw new Error("Order creation failed");
     }
 
-    console.log("ORDER TOTALS:", createdOrder.totalMoney);
-    console.log("ORDER TAXES:", createdOrder.taxes);
-
-    // ✅ STEP 2 — Create payment link using that order
+    // Create payment link
+        // Create payment link
 const paymentLinkResponse =
   await squareClient.checkout.paymentLinks.create({
     idempotencyKey: randomUUID(),
     order: {
-      locationId,
-      lineItems,
-      fulfillments,
-      pricingOptions: {
-        autoApplyTaxes: true,
-        autoApplyDiscounts: true,
-      },
+      id: createdOrder.id,
+      locationId: locationId,
     },
     checkoutOptions: {
       redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
     },
   });
+
     const paymentLink = paymentLinkResponse.paymentLink;
 
     return NextResponse.json({
@@ -97,6 +107,7 @@ const paymentLinkResponse =
 
   } catch (error: any) {
     console.error("Checkout error:", error);
+
     return NextResponse.json({ error: "Checkout failed" }, { status: 500 });
   }
 }

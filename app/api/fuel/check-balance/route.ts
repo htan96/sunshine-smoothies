@@ -15,7 +15,7 @@ function normalizePhone(phone: string) {
     return `+${digits}`;
   }
 
-  if (digits.startsWith("+")) {
+  if (phone.startsWith("+")) {
     return phone;
   }
 
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
 
     const normalizedPhone = normalizePhone(phone);
 
+    // Search Square customer
     const searchResponse = await squareClient.customers.search({
       query: {
         filter: {
@@ -63,16 +64,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Lookup wallet by phone
     const { data: balance, error } = await supabase
       .from("customer_fuel_balances")
       .select("*")
-      .eq("square_customer_id", customer.id)
+      .eq("phone", normalizedPhone)
       .single();
 
     if (error || !balance) {
       return NextResponse.json({
         allowed: false,
         message: "No fuel balance found",
+        squareCustomerId: customer.id,
+        phone: normalizedPhone,
         balances: {
           medium: 0,
           large: 0,
@@ -89,11 +93,12 @@ export async function POST(req: NextRequest) {
       jumbo: balance.fuel_jumbo ?? 0,
     };
 
+    // If only checking balance
     if (!size) {
       return NextResponse.json({
         allowed: true,
-        remaining: 0,
         squareCustomerId: customer.id,
+        phone: normalizedPhone,
         balances,
       });
     }
@@ -113,6 +118,7 @@ export async function POST(req: NextRequest) {
         message: "No drinks remaining",
         remaining,
         squareCustomerId: customer.id,
+        phone: normalizedPhone,
         balances,
       });
     }
@@ -121,8 +127,10 @@ export async function POST(req: NextRequest) {
       allowed: true,
       remaining,
       squareCustomerId: customer.id,
+      phone: normalizedPhone,
       balances,
     });
+
   } catch (error) {
     console.error("Fuel balance check failed:", error);
 
