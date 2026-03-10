@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleFuelOrder } from "@/lib/fuel/engine";
 import { squareClient } from "@/lib/square/client";
+import { supabase } from "@/lib/supabase/client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,7 +15,6 @@ export async function POST(req: NextRequest) {
 
     const orderState = body?.data?.object?.order_updated?.state;
 
-    // Only run when order is finished
     if (orderState !== "COMPLETED") {
       console.log("Order not completed yet");
       return NextResponse.json({ received: true });
@@ -29,9 +29,22 @@ export async function POST(req: NextRequest) {
 
     console.log("Retrieving order:", orderId);
 
-const response = await squareClient.orders.get({
-  orderId: orderId
-});
+    // Prevent duplicate processing
+    const { data: existing } = await supabase
+      .from("processed_orders")
+      .select("order_id")
+      .eq("order_id", orderId)
+      .single();
+
+    if (existing) {
+      console.log("Order already processed:", orderId);
+      return NextResponse.json({ received: true });
+    }
+
+    const response = await squareClient.orders.get({
+      orderId: orderId
+    });
+
     const order = response.order;
 
     if (!order) {
@@ -42,6 +55,10 @@ const response = await squareClient.orders.get({
     console.log("Order retrieved:", order.id);
 
     await handleFuelOrder(order);
+
+    await supabase.from("processed_orders").insert({
+      order_id: orderId
+    });
 
     return NextResponse.json({ success: true });
 
