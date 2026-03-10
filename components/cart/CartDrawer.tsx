@@ -1,9 +1,30 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useCartStore } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
+
+/* -------------------------------- */
+/* ORDERING HOURS CONFIG            */
+/* -------------------------------- */
+
+const TEST_MODE = true;
+
+const ORDER_START_HOUR = 8;
+const ORDER_END_HOUR = 18;
+
+function isWithinOrderingHours() {
+  if (TEST_MODE) return true;
+
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= ORDER_START_HOUR && hour < ORDER_END_HOUR;
+}
+
+/* -------------------------------- */
+/* HELPERS                          */
+/* -------------------------------- */
 
 function getDefaultPickupTime() {
   const now = new Date();
@@ -11,11 +32,9 @@ function getDefaultPickupTime() {
   return now;
 }
 
-function isWithinOrderingHours() {
-  const now = new Date();
-  const hour = now.getHours();
-  return hour >= 8 && hour < 18; // 8AM–6PM
-}
+/* -------------------------------- */
+/* TYPES                            */
+/* -------------------------------- */
 
 type FuelBalances = {
   medium: number;
@@ -23,6 +42,10 @@ type FuelBalances = {
   xl: number;
   jumbo: number;
 };
+
+/* -------------------------------- */
+/* COMPONENT                        */
+/* -------------------------------- */
 
 export default function CartDrawer() {
   const {
@@ -198,10 +221,7 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={closeCart}
-      />
+      <div className="absolute inset-0 bg-black/40" onClick={closeCart} />
 
       <div className="relative w-full md:w-[440px] bg-white h-full flex flex-col">
 
@@ -209,7 +229,6 @@ export default function CartDrawer() {
 
         <div className="px-6 py-5 border-b flex justify-between">
           <h2 className="text-lg font-semibold">Your Order</h2>
-
           <button onClick={closeCart}>✕</button>
         </div>
 
@@ -258,7 +277,6 @@ export default function CartDrawer() {
               <div className="flex justify-between mt-3">
 
                 <div className="flex gap-3">
-
                   <button
                     onClick={() =>
                       updateQuantity(item.id, item.quantity - 1)
@@ -276,7 +294,6 @@ export default function CartDrawer() {
                   >
                     +
                   </button>
-
                 </div>
 
                 <button
