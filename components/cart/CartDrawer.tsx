@@ -298,7 +298,7 @@ export default function CartDrawer() {
               Ready Around {readyTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
             </p>
 
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
 
               {timeSlots.map((time) => (
                 <button
@@ -306,8 +306,8 @@ export default function CartDrawer() {
                   onClick={() => setPickupDate(time.date)}
                   className={`px-4 py-2 rounded-full border whitespace-nowrap ${
                     pickupDate.getTime() === time.date.getTime()
-                      ? "bg-black text-white"
-                      : "bg-white"
+                       ? "bg-black text-white border-black"
+                        : "bg-white text-neutral-700 hover:bg-neutral-50"
                   }`}
                 >
                   {time.label}
