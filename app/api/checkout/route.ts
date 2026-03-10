@@ -125,7 +125,6 @@ export async function POST(req: Request) {
       }));
 
     if (!lineItems.length) {
-      console.error("No valid line items");
       return NextResponse.json(
         { error: "Invalid cart items" },
         { status: 400 }
@@ -144,7 +143,7 @@ export async function POST(req: Request) {
 
       try {
 
-        const customerResponse = await squareClient.customers.search({
+        const search = await squareClient.customers.search({
           query: {
             filter: {
               phoneNumber: {
@@ -154,31 +153,41 @@ export async function POST(req: Request) {
           }
         });
 
-        const existingCustomer =
-          customerResponse.customers?.[0];
+        const existing = search.customers?.[0];
 
-        if (existingCustomer) {
-
-          customerId = existingCustomer.id;
-
+        if (existing) {
+          customerId = existing.id;
         } else {
 
-          const newCustomer =
+          const created =
             await squareClient.customers.create({
-              phoneNumber: `+1${phone}`,
+              phoneNumber: `+1${phone}`
             });
 
-          customerId = newCustomer.customer?.id ?? null;
+          customerId = created.customer?.id ?? null;
 
         }
 
-      } catch (err) {
-
-        console.error("Customer lookup failed:", err);
-
+      } catch (error) {
+        console.error("Customer lookup failed:", error);
       }
-
     }
+
+    /* -------------------------------- */
+    /* Build Metadata (NO EMPTY VALUES) */
+/* -------------------------------- */
+
+const metadata: Record<string, string> = {
+  fuel_phone: phone ?? "",
+  fuel_pack: fuelPackInCart ? "true" : "false",
+  fuel_redeem: redemptionInCart ? "true" : "false",
+};
+
+if (packSize) metadata.pack_size = packSize;
+if (redemptionSize) metadata.redemption_size = redemptionSize;
+if (pickupTime) metadata.pickup_time = pickupTime;
+if (notes && notes.trim() !== "") metadata.notes = notes;
+
 
     /* -------------------------------- */
     /* Create Payment Link              */
@@ -195,19 +204,9 @@ export async function POST(req: Request) {
 
           lineItems: lineItems,
 
-          ...(customerId && {
-            customerId: customerId
-          }),
+          ...(customerId && { customerId }),
 
-          metadata: {
-            fuel_phone: phone ? String(phone) : "",
-            fuel_pack: fuelPackInCart ? "true" : "false",
-            fuel_redeem: redemptionInCart ? "true" : "false",
-            pack_size: packSize ? String(packSize) : "",
-            redemption_size: redemptionSize ? String(redemptionSize) : "",
-            pickup_time: pickupTime ? String(pickupTime) : "",
-            notes: notes ? String(notes) : ""
-          },
+          metadata,
 
           pricingOptions: {
             autoApplyTaxes: true,
@@ -217,10 +216,8 @@ export async function POST(req: Request) {
         },
 
         checkoutOptions: {
-
           redirectUrl:
             `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
-
         }
 
       });
