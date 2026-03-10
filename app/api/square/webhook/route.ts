@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { handleFuelOrder } from "@/lib/fuel/engine";
 import { squareClient } from "@/lib/square/client";
-import { supabase } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
