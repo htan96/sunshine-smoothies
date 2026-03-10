@@ -290,33 +290,58 @@ export default function CartDrawer() {
             </p>
           </div>
 
-          {/* PICKUP TIME */}
+         {/* PICKUP TIME */}
 
-          <div className="space-y-3">
+<div className="space-y-3">
 
-            <p className="text-xs uppercase text-neutral-400">
-              Ready Around {readyTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-            </p>
+  <p className="text-xs uppercase text-neutral-400">
+    Ready Around {readyTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+  </p>
 
-            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+  {/* MOBILE TIME PODS */}
 
-              {timeSlots.map((time) => (
-                <button
-                  key={time.value}
-                  onClick={() => setPickupDate(time.date)}
-                  className={`px-4 py-2 rounded-full border whitespace-nowrap ${
-                    pickupDate.getTime() === time.date.getTime()
-                       ? "bg-black text-white border-black"
-                        : "bg-white text-neutral-700 hover:bg-neutral-50"
-                  }`}
-                >
-                  {time.label}
-                </button>
-              ))}
+  <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 md:hidden">
 
-            </div>
+    {timeSlots.map((time) => (
+      <button
+        key={time.value}
+        onClick={() => setPickupDate(time.date)}
+        className={`px-4 py-2 rounded-full border border-neutral-200 whitespace-nowrap transition ${
+          pickupDate.getTime() === time.date.getTime()
+            ? "bg-black text-white border-black"
+            : "bg-white text-neutral-700 hover:bg-neutral-50"
+        }`}
+      >
+        {time.label}
+      </button>
+    ))}
 
-          </div>
+  </div>
+
+  {/* DESKTOP SELECTOR */}
+
+  <div className="hidden md:block">
+
+    <select
+      value={pickupDate.toISOString()}
+      onChange={(e) => {
+        const selected = timeSlots.find(slot => slot.value === e.target.value)
+        if (selected) setPickupDate(selected.date)
+      }}
+      className="w-full border border-neutral-200 rounded-xl px-4 py-3 bg-white"
+    >
+
+      {timeSlots.map((slot) => (
+        <option key={slot.value} value={slot.value}>
+          {slot.label}
+        </option>
+      ))}
+
+    </select>
+
+  </div>
+
+</div>
 
           {/* PHONE INPUT */}
 
