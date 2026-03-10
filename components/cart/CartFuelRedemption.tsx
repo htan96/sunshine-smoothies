@@ -1,3 +1,5 @@
+"use client" 
+
 type FuelBalances = {
   medium: number;
   large: number;
@@ -6,7 +8,7 @@ type FuelBalances = {
 };
 
 type Props = {
-  redemptionInCart: boolean;
+  phoneRequired: boolean;
   phone: string;
   handlePhoneChange: (value: string) => void;
   fuelBalances: FuelBalances;
@@ -14,18 +16,18 @@ type Props = {
 };
 
 export default function CartFuelRedemption({
-  redemptionInCart,
+  phoneRequired,
   phone,
   handlePhoneChange,
   fuelBalances,
   checkFuelBalance,
 }: Props) {
-  if (!redemptionInCart) return null;
+  if (!phoneRequired) return null;
 
   return (
     <div className="space-y-3">
       <p className="text-xs uppercase tracking-widest text-neutral-400">
-        Phone Number Required for Redemption
+        Phone Number Required
       </p>
 
       <input
