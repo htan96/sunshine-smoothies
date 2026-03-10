@@ -9,7 +9,7 @@ import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
 /* ORDERING HOURS CONFIG            */
 /* -------------------------------- */
 
-const TEST_MODE = true;
+const TEST_MODE = false;
 
 const ORDER_START_HOUR = 8;
 const ORDER_END_HOUR = 18;
@@ -100,9 +100,17 @@ export default function CartDrawer() {
   /* Detect Fuel Pack Purchases       */
   /* -------------------------------- */
 
-  const fuelPackInCart = items.some((item) =>
-    Object.values(PACK_VARIATIONS).includes(item.variationId)
-  );
+const fuelPackItem = items.find((item) =>
+  Object.values(PACK_VARIATIONS).includes(item.variationId)
+);
+
+const fuelPackInCart = Boolean(fuelPackItem);
+
+const packSize = fuelPackItem
+  ? Object.entries(PACK_VARIATIONS).find(
+      ([, id]) => id === fuelPackItem.variationId
+    )?.[0]
+  : null;
 
   const phoneRequired = redemptionInCart || fuelPackInCart;
 
@@ -163,6 +171,11 @@ export default function CartDrawer() {
 
     if (phoneRequired && !phone.trim()) {
       alert("Phone number required.");
+      return;
+    }
+
+    if (fuelPackInCart && redemptionInCart && packSize !== redemptionSize) {
+      alert("Fuel Pack redemption must match the pack size.");
       return;
     }
 
