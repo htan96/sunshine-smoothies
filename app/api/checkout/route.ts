@@ -40,6 +40,7 @@ const REDEEM_VARIATIONS = {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+    console.log("CHECKOUT BODY:", body);
 
     const {
       items,
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
       squareCustomerId,
       phone,
     } = body;
-
+console.log("CHECKOUT ITEMS:", items);
     /* -------------------------------- */
     /* Basic Validation                 */
     /* -------------------------------- */
@@ -100,16 +101,12 @@ export async function POST(req: Request) {
     /* Build Line Items                 */
     /* -------------------------------- */
 
-    const lineItems = items
-  .filter((item: any) => item.quantity && item.quantity > 0 && item.variationId)
-  .map((item: any) => ({
-    quantity: String(item.quantity),
-    catalogObjectId: item.variationId,
-    modifiers:
-      item.modifiers?.map((mod: any) => ({
-        catalogObjectId: mod.modifierId,
-      })) || [],
-  }));
+    const lineItems = items.map((item: any) => ({
+  quantity: String(item.quantity),
+  catalogObjectId: item.variationId,
+}));
+
+console.log("SQUARE LINE ITEMS:", lineItems);
 
 if (!lineItems.length) {
   return NextResponse.json(
