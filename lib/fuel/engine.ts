@@ -31,7 +31,6 @@ function normalizePhone(phone?: string | null) {
 
   const digits = phone.replace(/\D/g, "");
 
-  // US normalization
   if (digits.length === 10) {
     return `+1${digits}`;
   }
@@ -40,7 +39,6 @@ function normalizePhone(phone?: string | null) {
     return `+${digits}`;
   }
 
-  // fallback
   if (phone.startsWith("+")) {
     return phone;
   }
@@ -55,6 +53,7 @@ async function getCustomerPhone(customerId: string) {
     });
 
     const customer = response.customer;
+
     const rawPhone = customer?.phoneNumber ?? null;
     const normalizedPhone = normalizePhone(rawPhone);
 
@@ -122,38 +121,29 @@ export async function handleFuelOrder(order: any) {
   const phone = await getCustomerPhone(customerId);
 
   if (!phone) {
-    console.log("No phone found for customer. Skipping fuel processing.");
+    console.log("No phone found for customer. Skipping.");
     return;
   }
 
-  // Prevent duplicate processing
-  const { data: existingProcessed, error: processedLookupError } = await supabase
+  // Prevent duplicate webhook processing
+  const { error: processedInsertError } = await supabase
     .from("processed_orders")
-    .select("order_id")
-    .eq("order_id", orderId)
-    .maybeSingle();
+    .insert({
+      order_id: orderId,
+      phone,
+    });
 
-  if (processedLookupError) {
-    console.error("Failed checking processed_orders:", processedLookupError);
-    throw processedLookupError;
-  }
-
-  if (existingProcessed) {
+  if (processedInsertError) {
     console.log("Order already processed:", orderId);
     return;
   }
 
-  // Get balance by PHONE first
-  const { data: existingBalance, error: balanceLookupError } = await supabase
+  // Get balance by phone
+  const { data: existingBalance } = await supabase
     .from("customer_fuel_balances")
     .select("*")
     .eq("phone", phone)
     .maybeSingle();
-
-  if (balanceLookupError) {
-    console.error("Failed looking up balance by phone:", balanceLookupError);
-    throw balanceLookupError;
-  }
 
   let balance = existingBalance || {
     phone,
@@ -164,19 +154,15 @@ export async function handleFuelOrder(order: any) {
     fuel_jumbo: 0,
   };
 
-  // Always keep the most recent Square customer id
   balance.square_customer_id = customerId;
-  balance.phone = phone;
 
   console.log("Starting balance:", balance);
 
   for (const item of order.lineItems) {
-    console.log("Processing item:", item);
-
     const variationId = item.catalogObjectId;
     const quantity = Number(item.quantity || 1);
 
-    console.log("Variation ID:", variationId);
+    console.log("Processing item:", variationId, "qty:", quantity);
 
     // PACK PURCHASES
     if (variationId === PACK_VARIATIONS.MEDIUM) {
@@ -185,108 +171,75 @@ export async function handleFuelOrder(order: any) {
       await recordTransaction(phone, customerId, orderId, "PACK", "MEDIUM", credits);
     }
 
-    if (variationId === PACK_VARIATIONS.LARGE) {
+    else if (variationId === PACK_VARIATIONS.LARGE) {
       const credits = 8 * quantity;
       balance.fuel_large += credits;
       await recordTransaction(phone, customerId, orderId, "PACK", "LARGE", credits);
     }
 
-    if (variationId === PACK_VARIATIONS.XL) {
+    else if (variationId === PACK_VARIATIONS.XL) {
       const credits = 8 * quantity;
       balance.fuel_xl += credits;
       await recordTransaction(phone, customerId, orderId, "PACK", "XL", credits);
     }
 
-    if (variationId === PACK_VARIATIONS.JUMBO) {
+    else if (variationId === PACK_VARIATIONS.JUMBO) {
       const credits = 8 * quantity;
       balance.fuel_jumbo += credits;
       await recordTransaction(phone, customerId, orderId, "PACK", "JUMBO", credits);
     }
 
     // REDEMPTIONS
-    if (variationId === REDEEM_VARIATIONS.MEDIUM) {
+    else if (variationId === REDEEM_VARIATIONS.MEDIUM) {
       if (balance.fuel_medium >= quantity) {
         balance.fuel_medium -= quantity;
         await recordTransaction(phone, customerId, orderId, "REDEEM", "MEDIUM", quantity);
-      } else {
-        console.log("Blocked medium redemption, insufficient balance:", {
-          phone,
-          requested: quantity,
-          available: balance.fuel_medium,
-        });
       }
     }
 
-    if (variationId === REDEEM_VARIATIONS.LARGE) {
+    else if (variationId === REDEEM_VARIATIONS.LARGE) {
       if (balance.fuel_large >= quantity) {
         balance.fuel_large -= quantity;
         await recordTransaction(phone, customerId, orderId, "REDEEM", "LARGE", quantity);
-      } else {
-        console.log("Blocked large redemption, insufficient balance:", {
-          phone,
-          requested: quantity,
-          available: balance.fuel_large,
-        });
       }
     }
 
-    if (variationId === REDEEM_VARIATIONS.XL) {
+    else if (variationId === REDEEM_VARIATIONS.XL) {
       if (balance.fuel_xl >= quantity) {
         balance.fuel_xl -= quantity;
         await recordTransaction(phone, customerId, orderId, "REDEEM", "XL", quantity);
-      } else {
-        console.log("Blocked XL redemption, insufficient balance:", {
-          phone,
-          requested: quantity,
-          available: balance.fuel_xl,
-        });
       }
     }
 
-    if (variationId === REDEEM_VARIATIONS.JUMBO) {
+    else if (variationId === REDEEM_VARIATIONS.JUMBO) {
       if (balance.fuel_jumbo >= quantity) {
         balance.fuel_jumbo -= quantity;
         await recordTransaction(phone, customerId, orderId, "REDEEM", "JUMBO", quantity);
-      } else {
-        console.log("Blocked jumbo redemption, insufficient balance:", {
-          phone,
-          requested: quantity,
-          available: balance.fuel_jumbo,
-        });
       }
     }
   }
 
   console.log("Updated balance:", balance);
 
-  const { error: upsertError } = await supabase.from("customer_fuel_balances").upsert(
-    {
-      phone,
-      square_customer_id: customerId,
-      fuel_medium: balance.fuel_medium,
-      fuel_large: balance.fuel_large,
-      fuel_xl: balance.fuel_xl,
-      fuel_jumbo: balance.fuel_jumbo,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: "phone",
-    }
-  );
+  // Update balance snapshot
+  const { error: upsertError } = await supabase
+    .from("customer_fuel_balances")
+    .upsert(
+      {
+        phone,
+        square_customer_id: customerId,
+        fuel_medium: balance.fuel_medium,
+        fuel_large: balance.fuel_large,
+        fuel_xl: balance.fuel_xl,
+        fuel_jumbo: balance.fuel_jumbo,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "phone" }
+    );
 
   if (upsertError) {
     console.error("Failed updating customer_fuel_balances:", upsertError);
     throw upsertError;
-  }
-
-  const { error: processedInsertError } = await supabase.from("processed_orders").insert({
-    order_id: orderId,
-    phone,
-  });
-
-  if (processedInsertError) {
-    console.error("Failed inserting processed order:", processedInsertError);
-    throw processedInsertError;
   }
 
   const display = formatDisplay(balance);
@@ -299,7 +252,7 @@ export async function handleFuelOrder(order: any) {
       familyName: display,
     });
   } catch (error) {
-    console.error("Failed to update Square customer display:", error);
+    console.error("Failed updating Square customer display:", error);
   }
 
   console.log("Fuel engine finished successfully.");
