@@ -14,6 +14,9 @@ const TEST_MODE = false;
 const ORDER_START_HOUR = 8;
 const ORDER_END_HOUR = 18;
 
+const PREP_TIME_MINUTES = 20;
+const SLOT_INTERVAL = 15;
+
 function isWithinOrderingHours() {
   if (TEST_MODE) return true;
 
@@ -26,10 +29,42 @@ function isWithinOrderingHours() {
 /* HELPERS                          */
 /* -------------------------------- */
 
-function getDefaultPickupTime() {
+function getReadyTime() {
   const now = new Date();
-  now.setMinutes(now.getMinutes() + 20);
+  now.setMinutes(now.getMinutes() + PREP_TIME_MINUTES);
   return now;
+}
+
+function generatePickupSlots() {
+  const now = new Date();
+  const start = new Date(now.getTime() + PREP_TIME_MINUTES * 60000);
+
+  const closing = new Date();
+  closing.setHours(ORDER_END_HOUR, 0, 0, 0);
+
+  const slots = [];
+
+  const firstSlot = new Date(start);
+  firstSlot.setMinutes(
+    Math.ceil(firstSlot.getMinutes() / SLOT_INTERVAL) * SLOT_INTERVAL
+  );
+
+  let current = firstSlot;
+
+  while (current <= closing) {
+    slots.push({
+      date: new Date(current),
+      label: current.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+      value: current.toISOString(),
+    });
+
+    current = new Date(current.getTime() + SLOT_INTERVAL * 60000);
+  }
+
+  return slots;
 }
 
 /* -------------------------------- */
@@ -59,8 +94,7 @@ export default function CartDrawer() {
 
   const selectedLocation = useLocationStore((state) => state.selectedLocation);
 
-  const [pickupDate, setPickupDate] = useState<Date>(getDefaultPickupTime());
-  const [asap, setAsap] = useState(true);
+  const [pickupDate, setPickupDate] = useState<Date>(getReadyTime());
   const [notes, setNotes] = useState("");
   const [phone, setPhone] = useState("");
 
@@ -75,6 +109,8 @@ export default function CartDrawer() {
   });
 
   const orderingOpen = isWithinOrderingHours();
+  const timeSlots = generatePickupSlots();
+  const readyTime = getReadyTime();
 
   /* -------------------------------- */
   /* Detect Redemption Items          */
@@ -100,17 +136,17 @@ export default function CartDrawer() {
   /* Detect Fuel Pack Purchases       */
   /* -------------------------------- */
 
-const fuelPackItem = items.find((item) =>
-  Object.values(PACK_VARIATIONS).includes(item.variationId)
-);
+  const fuelPackItem = items.find((item) =>
+    Object.values(PACK_VARIATIONS).includes(item.variationId)
+  );
 
-const fuelPackInCart = Boolean(fuelPackItem);
+  const fuelPackInCart = Boolean(fuelPackItem);
 
-const packSize = fuelPackItem
-  ? Object.entries(PACK_VARIATIONS).find(
-      ([, id]) => id === fuelPackItem.variationId
-    )?.[0]
-  : null;
+  const packSize = fuelPackItem
+    ? Object.entries(PACK_VARIATIONS).find(
+        ([, id]) => id === fuelPackItem.variationId
+      )?.[0]
+    : null;
 
   const phoneRequired = redemptionInCart || fuelPackInCart;
 
@@ -204,10 +240,6 @@ const packSize = fuelPackItem
       }
     }
 
-    const calculatedPickupTime = asap
-      ? new Date(Date.now() + 20 * 60000)
-      : pickupDate;
-
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: {
@@ -215,7 +247,7 @@ const packSize = fuelPackItem
       },
       body: JSON.stringify({
         items,
-        pickupTime: calculatedPickupTime.toISOString(),
+        pickupTime: pickupDate.toISOString(),
         notes,
         locationId: selectedLocation.id,
         phone,
@@ -256,6 +288,34 @@ const packSize = fuelPackItem
             <p className="text-sm text-neutral-500">
               {selectedLocation?.address}
             </p>
+          </div>
+
+          {/* PICKUP TIME */}
+
+          <div className="space-y-3">
+
+            <p className="text-xs uppercase text-neutral-400">
+              Ready Around {readyTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+            </p>
+
+            <div className="flex gap-3 overflow-x-auto pb-2">
+
+              {timeSlots.map((time) => (
+                <button
+                  key={time.value}
+                  onClick={() => setPickupDate(time.date)}
+                  className={`px-4 py-2 rounded-full border whitespace-nowrap ${
+                    pickupDate.getTime() === time.date.getTime()
+                      ? "bg-black text-white"
+                      : "bg-white"
+                  }`}
+                >
+                  {time.label}
+                </button>
+              ))}
+
+            </div>
+
           </div>
 
           {/* PHONE INPUT */}
@@ -317,6 +377,7 @@ const packSize = fuelPackItem
 
           {items.map((item) => (
             <div key={item.id} className="border rounded-xl p-4">
+
               <p className="font-medium">{item.itemName}</p>
 
               <p className="text-sm text-neutral-500">
@@ -326,6 +387,7 @@ const packSize = fuelPackItem
               <div className="flex justify-between mt-3">
 
                 <div className="flex gap-3">
+
                   <button
                     onClick={() =>
                       updateQuantity(item.id, item.quantity - 1)
@@ -343,6 +405,7 @@ const packSize = fuelPackItem
                   >
                     +
                   </button>
+
                 </div>
 
                 <button
@@ -353,6 +416,7 @@ const packSize = fuelPackItem
                 </button>
 
               </div>
+
             </div>
           ))}
 
