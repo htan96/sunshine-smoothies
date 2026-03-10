@@ -112,7 +112,7 @@ export default function HeroPromoSlider() {
 
         {/* Social proof */}
         <div className="mt-6 text-sm text-gray-300 flex justify-center gap-4">
-          <span>⭐ 4.8 Google Rating</span>
+          <span>⭐ 4.6 Google Rating</span>
           <span>•</span>
           <span>Vallejo Local Favorite</span>
         </div>
