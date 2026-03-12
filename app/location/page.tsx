@@ -65,7 +65,7 @@ export default function LocationPage() {
             </p>
 
             <p className="text-lg">Open Daily</p>
-            <p className="text-lg">8:30AM – 5:30PM</p>
+            <p className="text-lg">8:00AM – 7:00PM</p>
 
             <div className="mt-6 flex gap-4 flex-wrap">
               <button
@@ -116,8 +116,8 @@ export default function LocationPage() {
             </p>
 
             <p className="text-lg">Open Daily</p>
-            <p className="text-lg">Monday - Friday 7AM – 5PM</p>
-            <p className="text-lg">Saturday - Sunday 8AM - 5PM</p>
+            <p className="text-lg">Monday - Friday 7AM – 7PM</p>
+            <p className="text-lg">Saturday - Sunday 8AM - 7PM</p>
 
             <div className="mt-6 flex gap-4 flex-wrap">
               <button
