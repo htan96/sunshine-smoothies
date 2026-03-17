@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Fuel Packs & Rewards | Sunshine Smoothies",
@@ -11,5 +12,10 @@ export default function FuelLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return (
+    <>
+      {children}
+      <Footer />
+    </>
+  );
 }

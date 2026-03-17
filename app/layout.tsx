@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
@@ -25,7 +26,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const { selectedLocation } = useLocationStore();
+  const isFuelPage = pathname?.startsWith("/fuel");
 
   const schema = {
     "@context": "https://schema.org",
@@ -131,7 +134,7 @@ export default function RootLayout({
 
         <main>{children}</main>
 
-        <Footer />
+        {!isFuelPage && <Footer />}
 
         {/* Mobile: Sticky floating cart button */}
         <CartFloatingButton />
