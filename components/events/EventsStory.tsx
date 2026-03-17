@@ -8,15 +8,15 @@ export default function EventsStory() {
 
         <p className="mt-6 text-gray-700 leading-relaxed text-lg">
           Free Smoothie Day started as a simple idea: what if we could give back to
-          the people who&apos;ve supported us from day one? Every year, we open our doors
-          and serve complimentary smoothies to our Vallejo community — no purchase
-          required, no catch.
+          the people who&apos;ve supported us from day one? Several times a year, we open
+          our doors and serve complimentary smoothies to our Vallejo community — no
+          purchase required, no catch.
         </p>
 
         <p className="mt-6 text-gray-700 leading-relaxed text-lg">
-          It&apos;s become one of our favorite days. We get to meet neighbors, hear stories,
+          It&apos;s become one of our favorite events. We get to meet neighbors, hear stories,
           and share what we love most: fresh, real ingredients in every cup. The energy
-          in the shop that day reminds us why we do what we do.
+          in the shop on those days reminds us why we do what we do.
         </p>
       </div>
     </section>

@@ -11,7 +11,7 @@ export default function EventsHero() {
           </h2>
           <div className="h-[3px] w-14 bg-yellow-400 mt-4 mb-6" />
           <p className="text-gray-700 leading-relaxed text-lg">
-            Every year, we celebrate our community with complimentary smoothies —
+            Several times a year, we celebrate our community with complimentary smoothies —
             no strings attached. It&apos;s our way of thanking Vallejo for supporting
             us from day one.
           </p>

@@ -11,10 +11,10 @@ export default function EventsGallery() {
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Photos from the Day
+            Photos from Our Celebrations
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Moments from our annual Free Smoothie Day celebration.
+            Moments from our Free Smoothie Day celebrations throughout the year.
           </p>
         </div>
 

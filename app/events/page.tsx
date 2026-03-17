@@ -9,7 +9,7 @@ import SocialSection from "@/components/home/SocialSection";
 export const metadata: Metadata = {
   title: "Free Smoothie Day | Sunshine Smoothies Events",
   description:
-    "Learn about Free Smoothie Day at Sunshine Smoothies in Vallejo — why we give away free smoothies to our community and the story behind this annual celebration.",
+    "Learn about Free Smoothie Day at Sunshine Smoothies in Vallejo — we give away free smoothies to our community several times a year. The story behind this recurring celebration.",
 };
 
 export default function EventsPage() {

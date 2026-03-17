@@ -9,7 +9,7 @@ export default function EventsIntro() {
         <div className="h-[3px] w-16 bg-yellow-400 mx-auto mt-5 rounded-full" />
 
         <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
-          One day each year, we give away free smoothies to our community —
+          Several times a year, we give away free smoothies to our community —
           no strings attached. Here&apos;s the story behind it.
         </p>
       </div>
