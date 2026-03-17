@@ -78,10 +78,10 @@ export default function CategoryTabs({
   }, [activeCategory]);
 
   return (
-    <div className="relative -mx-6 md:mx-0 px-6 md:px-0">
+    <div className="relative -mx-6 md:mx-0 px-6 md:px-0 overflow-hidden md:overflow-visible">
       <div
         ref={scrollRef}
-        className="no-scrollbar overflow-x-auto scroll-smooth flex gap-2 min-w-max md:min-w-0"
+        className="no-scrollbar overflow-x-auto overflow-y-visible scroll-smooth flex gap-2 min-w-0 md:min-w-0"
       >
         {safeCategories.map((cat) => {
           const active = cat.id === activeCategory;
