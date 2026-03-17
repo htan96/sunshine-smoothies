@@ -32,9 +32,10 @@ export default function RootLayout({
 
   const schema = {
     "@context": "https://schema.org",
-    "@type": "Local Business",
+    "@type": "LocalBusiness",
     name: "Sunshine Smoothies",
     url: "https://sunshinesmoothiesvallejo.com",
+    image: "https://sunshinesmoothiesvallejo.com/logo.png",
     logo: "https://sunshinesmoothiesvallejo.com/logo.png",
     sameAs: [
           "https://www.instagram.com/sunshinesmoothiesandcoffee/",
@@ -116,11 +117,27 @@ export default function RootLayout({
     content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru."
   />
 
-  {/* Favicons */}
+  {/* Open Graph / Social Sharing */}
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sunshinesmoothiesvallejo.com" />
+  <meta property="og:title" content="Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo" />
+  <meta property="og:description" content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru." />
+  <meta property="og:image" content="https://sunshinesmoothiesvallejo.com/logo.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Sunshine Smoothies" />
+
+  {/* Twitter Card */}
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo" />
+  <meta name="twitter:description" content="Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru." />
+  <meta name="twitter:image" content="https://sunshinesmoothiesvallejo.com/logo.png" />
+
+  {/* Favicons & PWA */}
   <link rel="icon" href="/favicon.ico" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 
   {/* Local Business SEO */}
   <script

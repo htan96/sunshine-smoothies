@@ -13,6 +13,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: "https://sunshinesmoothiesvallejo.com/fuel",
+      lastModified: new Date(),
+      priority: 0.85,
+    },
+    {
       url: "https://sunshinesmoothiesvallejo.com/location",
       lastModified: new Date(),
       priority: 0.8,

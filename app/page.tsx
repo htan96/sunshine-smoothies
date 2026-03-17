@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
@@ -9,6 +10,20 @@ import SocialSection from "@/components/home/SocialSection";
 import { getBestSellersItems } from "@/lib/bestSellers";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo",
+  description:
+    "Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru.",
+  openGraph: {
+    url: "https://sunshinesmoothiesvallejo.com",
+    title: "Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo",
+    description:
+      "Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru.",
+    images: [{ url: "https://sunshinesmoothiesvallejo.com/logo.png" }],
+    type: "website",
+  },
+};
 
 async function BestSellersSection() {
   const items = await getBestSellersItems();
