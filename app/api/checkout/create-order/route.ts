@@ -301,6 +301,50 @@ export async function POST(req: Request) {
     if (displayNameTrimmed) metadata.display_name = displayNameTrimmed;
 
     /* -------------------------------- */
+    /* Pickup Fulfillment                */
+    /* Fuel-pack-only orders: no pickup (just buying credit).
+       Redemption or drinks: add PICKUP fulfillment so Square Order Manager
+       notifies staff and order appears in KDS/printer workflow.             */
+    /* -------------------------------- */
+
+    const packVariationIds = new Set(Object.values(PACK_VARIATIONS));
+    const allItemsAreFuelPacks = (items as CartItem[]).every((i) =>
+      packVariationIds.has(i.variationId)
+    );
+    const needsPickupFulfillment = redemptionInCart || !allItemsAreFuelPacks;
+
+    let fulfillments: Array<{
+      uid: string;
+      type: "PICKUP";
+      state: string;
+      pickupDetails: {
+        scheduleType: string;
+        pickupAt: string;
+        prepTimeDuration?: string;
+        recipient?: { displayName?: string };
+      };
+    }> | undefined;
+
+    if (needsPickupFulfillment && pickupTime) {
+      const pickupAt = new Date(pickupTime).toISOString();
+      fulfillments = [
+        {
+          uid: `pickup-${randomUUID().slice(0, 8)}`,
+          type: "PICKUP",
+          state: "PROPOSED",
+          pickupDetails: {
+            scheduleType: "SCHEDULED",
+            pickupAt,
+            prepTimeDuration: "PT20M",
+            ...(displayNameTrimmed && {
+              recipient: { displayName: displayNameTrimmed },
+            }),
+          },
+        },
+      ];
+    }
+
+    /* -------------------------------- */
     /* Create Order                     */
     /* -------------------------------- */
 
@@ -311,6 +355,7 @@ export async function POST(req: Request) {
         lineItems,
         ...(customerId && { customerId }),
         metadata,
+        ...(fulfillments && fulfillments.length > 0 && { fulfillments }),
         pricingOptions: {
           autoApplyTaxes: true,
           autoApplyDiscounts: true,
