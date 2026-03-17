@@ -2,7 +2,7 @@ import Image from "next/image";
 
 const GALLERY_IMAGES = [
   { src: "/events/newspaper.jpeg", alt: "Newspaper coverage of Free Smoothie Day" },
-  { src: "/events/larussels.jpeg", alt: "Community celebration at Sunshine Smoothies" },
+  { src: "/events/larussels.jpeg", alt: "La Russel and community at Free Smoothie Day" },
 ];
 
 export default function EventsGallery() {

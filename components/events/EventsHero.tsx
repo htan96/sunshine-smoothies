@@ -31,7 +31,7 @@ export default function EventsHero() {
           <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-lg">
             <Image
               src="/events/larussels.jpeg"
-              alt="Community celebration at Sunshine Smoothies"
+              alt="La Russel and community at Free Smoothie Day"
               fill
               className="object-cover"
               sizes="(max-width: 768px) 50vw, 25vw"

@@ -3,6 +3,7 @@ import EventsIntro from "@/components/events/EventsIntro";
 import EventsHero from "@/components/events/EventsHero";
 import EventsStory from "@/components/events/EventsStory";
 import EventsWhy from "@/components/events/EventsWhy";
+import EventsThanks from "@/components/events/EventsThanks";
 import EventsCTA from "@/components/events/EventsCTA";
 import SocialSection from "@/components/home/SocialSection";
 
@@ -19,6 +20,7 @@ export default function EventsPage() {
       <EventsHero />
       <EventsStory />
       <EventsWhy />
+      <EventsThanks />
       <EventsCTA />
       <SocialSection />
     </main>
