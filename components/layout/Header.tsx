@@ -36,8 +36,12 @@ export default function Header() {
             Menu
           </Link>
 
+          <Link href="/location" className="hover:text-[var(--color-orange)] transition">
+            Locations
+          </Link>
+
           <Link href="/fuel" className="hover:text-[var(--color-orange)] transition">
-            Fuel Packs
+            Fuel
           </Link>
 
           <Link href="/about" className="hover:text-[var(--color-orange)] transition">
@@ -50,10 +54,6 @@ export default function Header() {
 
           <Link href="/events" className="hover:text-[var(--color-orange)] transition">
             Events
-          </Link>
-
-          <Link href="/location" className="hover:text-[var(--color-orange)] transition">
-            Location
           </Link>
 
           {/* Custom Hybrid Cart Icon */}
