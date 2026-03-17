@@ -1,5 +1,7 @@
 import { SquareClient } from "square";
+import { fetchFullCatalog } from "@/features/square/catalog";
 import { loadMenu } from "@/features/menu/loadMenu";
+import { transformCatalog } from "@/features/menu/transform";
 
 export type BestSellerItem = {
   id: string;
@@ -7,27 +9,26 @@ export type BestSellerItem = {
   image: string | null;
 };
 
-async function fetchRawCatalog(squareClient: SquareClient): Promise<any[]> {
-  const objects: any[] = [];
-  let cursor: string | undefined = undefined;
-  do {
-    const res = await squareClient.catalog.list({ cursor });
-    const pageObjects = (res as any).objects ?? (res as any).result?.objects ?? [];
-    objects.push(...pageObjects);
-    cursor = (res as any).cursor ?? (res as any).result?.cursor ?? undefined;
-  } while (cursor);
-  return objects;
+async function getCatalogForVariationMap(): Promise<any[]> {
+  const objects = await fetchFullCatalog();
+  return objects as any[];
 }
 
 function buildVariationToItemFromRawCatalog(objects: any[]): Map<string, string> {
   const variationToItemId = new Map<string, string>();
   for (const obj of objects) {
-    if (obj.type !== "ITEM" || obj.isDeleted) continue;
-    const itemData = obj.itemData;
-    if (!itemData?.variations) continue;
-    for (const v of itemData.variations) {
-      const vid = typeof v === "string" ? v : v?.id;
-      if (vid) variationToItemId.set(vid, obj.id);
+    if (obj.isDeleted) continue;
+    if (obj.type === "ITEM") {
+      const itemData = obj.itemData;
+      if (!itemData?.variations) continue;
+      for (const v of itemData.variations) {
+        const vid = typeof v === "string" ? v : v?.id;
+        if (vid) variationToItemId.set(vid, obj.id);
+      }
+    } else if (obj.type === "ITEM_VARIATION") {
+      const vData = obj.itemVariationData;
+      const itemId = vData?.itemId ?? vData?.item_id;
+      if (obj.id && itemId) variationToItemId.set(obj.id, itemId);
     }
   }
   return variationToItemId;
@@ -48,11 +49,13 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
       token: process.env.SQUARE_ACCESS_TOKEN,
     });
 
-    const [allOrders, rawCatalog, items] = await Promise.all([
+    const [allOrders, rawCatalog] = await Promise.all([
       (async () => {
         const orders: any[] = [];
         let cursor: string | undefined = undefined;
-        const startAt = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString();
+        const startAt = new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString();
+        const maxPages = 3;
+        let pageCount = 0;
         do {
           const res = await squareClient.orders.search({
             locationIds,
@@ -68,12 +71,15 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
           });
           orders.push(...(res.orders ?? []));
           cursor = res.cursor ?? undefined;
+          pageCount++;
+          if (pageCount >= maxPages || !cursor) break;
         } while (cursor);
         return orders;
       })(),
-      fetchRawCatalog(squareClient),
-      loadMenu(locationId),
+      getCatalogForVariationMap(),
     ]);
+
+    const { items } = transformCatalog(rawCatalog, locationId);
 
     const variationCounts: Record<string, number> = {};
     for (const order of allOrders) {
@@ -87,6 +93,9 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
     }
 
     const variationToItemId = buildVariationToItemFromRawCatalog(rawCatalog);
+
+    // Debug: uncomment to see in terminal when loading home page
+    // console.log("[BestSellers] orders:", allOrders.length, "variations in orders:", Object.keys(variationCounts).length, "variation->item map:", variationToItemId.size);
 
     const itemSales: Record<string, number> = {};
     for (const [variationId, qty] of Object.entries(variationCounts)) {

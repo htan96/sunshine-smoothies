@@ -11,7 +11,7 @@ const slides = [
       "Prepaid fuel packs save you money on your favorite smoothies.",
     primary: {
       label: "Shop Fuel Packs",
-      href: "/menu?category=prepaid-packs",
+      href: "/fuel",
     },
     secondary: {
       label: "View Locations",

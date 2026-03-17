@@ -16,7 +16,7 @@ const inter = Inter({
   variable: "--font-inter",
 });
 import Footer from "@/components/layout/Footer";
-import CartDrawer from "@/components/cart/CartDrawer";
+import CartWithCheckoutModal from "@/components/cart/CartWithCheckoutModal";
 import CartFloatingButton from "@/components/cart/CartFloatingButton";
 import { useLocationStore } from "@/features/location/store";
 
@@ -136,8 +136,8 @@ export default function RootLayout({
         {/* Mobile: Sticky floating cart button */}
         <CartFloatingButton />
 
-        {/* Cart Drawer mounted globally */}
-        <CartDrawer />
+        {/* Cart + Checkout Modal (modal shows in testing mode) */}
+        <CartWithCheckoutModal />
       </body>
     </html>
   );

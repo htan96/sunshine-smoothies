@@ -2,7 +2,7 @@
 
 import { useCartStore } from "@/features/cart/store";
 
-const ORANGE = "#F4A024"; /* matches v3 design token */
+/* v3 design token */
 
 export default function CartFloatingButton() {
   const itemCount = useCartStore((state) => state.getItemCount());
@@ -15,12 +15,7 @@ export default function CartFloatingButton() {
       onClick={openCart}
       aria-label={`Cart${hasItems ? ` (${itemCount} items)` : ""}`}
       className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform active:scale-95"
-      style={{
-        backgroundColor: hasItems ? ORANGE : "white",
-        color: hasItems ? "white" : "black",
-        border: "2px solid",
-        borderColor: hasItems ? ORANGE : "rgb(229 231 235)",
-      }}
+      className={hasItems ? "bg-[var(--color-orange)] text-black border-2 border-[var(--color-orange)]" : "bg-white text-[var(--color-charcoal)] border-2 border-neutral-100"}
     >
       <svg
         viewBox="0 0 24 24"
@@ -36,7 +31,7 @@ export default function CartFloatingButton() {
         <circle cx="18" cy="19" r="1.5" />
       </svg>
       {hasItems && (
-        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-black text-white text-xs font-bold rounded-full">
+        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center bg-[var(--color-charcoal)] text-white text-xs font-bold rounded-full">
           {itemCount > 99 ? "99+" : itemCount}
         </span>
       )}

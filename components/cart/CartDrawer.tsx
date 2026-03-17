@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useCartStore } from "@/features/cart/store";
+import { useState, useEffect } from "react";
+import { useCartStore, type CartItem } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
 import LocationGate from "@/components/location/LocationGate";
+import MenuItemModal from "@/components/menu/MenuItemModal";
+import type { MenuItem } from "@/features/menu/types";
 
 /* -------------------------------- */
 /* ORDERING HOURS CONFIG            */
@@ -112,6 +114,10 @@ export default function CartDrawer() {
     jumbo: 0,
   });
 
+  const [editingCartItem, setEditingCartItem] = useState<CartItem | null>(null);
+  const [menuItemForEdit, setMenuItemForEdit] = useState<MenuItem | null>(null);
+  const [menuItemsForEdit, setMenuItemsForEdit] = useState<MenuItem[]>([]);
+
   const orderingOpen = isWithinOrderingHours();
   const timeSlots = generatePickupSlots();
   const readyTime = getReadyTime();
@@ -135,6 +141,50 @@ export default function CartDrawer() {
   const redemptionQuantity = redemptionItem
     ? Number(redemptionItem.quantity || 0)
     : 0;
+
+  /* -------------------------------- */
+  /* Fetch menu item for edit         */
+  /* -------------------------------- */
+
+  useEffect(() => {
+    if (!editingCartItem || !selectedLocation) {
+      setMenuItemForEdit(null);
+      setMenuItemsForEdit([]);
+      if (!selectedLocation && editingCartItem) setEditingCartItem(null);
+      return undefined;
+    }
+
+    let mounted = true;
+
+    async function fetchItem() {
+      try {
+        const res = await fetch(
+          `/api/square/catalog?location=${selectedLocation!.id}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+        if (!mounted) return;
+        const fetchedItems: MenuItem[] = data?.items ?? [];
+        const found = fetchedItems.find((i) => i.id === editingCartItem!.itemId);
+        if (mounted) {
+          setMenuItemForEdit(found ?? null);
+          setMenuItemsForEdit(fetchedItems);
+          if (!found) setEditingCartItem(null);
+        }
+      } catch {
+        if (mounted) {
+          setMenuItemForEdit(null);
+          setMenuItemsForEdit([]);
+          setEditingCartItem(null);
+        }
+      }
+    }
+
+    fetchItem();
+    return () => {
+      mounted = false;
+    };
+  }, [editingCartItem?.id, editingCartItem?.itemId, selectedLocation?.id]);
 
   /* -------------------------------- */
   /* Detect Fuel Pack Purchases       */
@@ -288,24 +338,32 @@ export default function CartDrawer() {
 
       <div className="relative w-full md:w-[440px] bg-white h-full flex flex-col">
 
-        {/* HEADER */}
+        {/* HEADER - v3 */}
 
-        <div className="px-6 py-5 border-b flex justify-between">
-          <h2 className="text-lg font-semibold">Your Order</h2>
-          <button onClick={closeCart}>✕</button>
+        <div className="px-6 py-5 border-b border-neutral-100 flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-[var(--color-charcoal)]">
+            Your Order
+          </h2>
+          <button
+            onClick={closeCart}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-100 text-[var(--color-muted)] transition"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
 
         {/* BODY */}
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-          {/* LOCATION */}
+          {/* LOCATION - v3 */}
 
-          <div className="bg-neutral-100 p-4 rounded-xl">
+          <div className="bg-[var(--color-orange-light)]/50 border border-[var(--color-orange)]/20 p-4 rounded-xl">
             {selectedLocation ? (
               <>
-                <p className="font-medium">{selectedLocation.name}</p>
-                <p className="text-sm text-neutral-500">
+                <p className="font-medium text-[var(--color-charcoal)]">{selectedLocation.name}</p>
+                <p className="text-sm text-[var(--color-muted)]">
                   {selectedLocation.address}
                 </p>
                 <button
@@ -318,8 +376,8 @@ export default function CartDrawer() {
               </>
             ) : (
               <>
-                <p className="font-medium text-neutral-600">Pickup location</p>
-                <p className="text-sm text-neutral-500 mb-2">
+                <p className="font-medium text-[var(--color-charcoal)]">Pickup location</p>
+                <p className="text-sm text-[var(--color-muted)] mb-2">
                   Select where you&apos;d like to pick up your order.
                 </p>
                 <button
@@ -333,11 +391,11 @@ export default function CartDrawer() {
             )}
           </div>
 
-         {/* PICKUP TIME */}
+         {/* PICKUP TIME - v3 */}
 
 <div className="space-y-3">
 
-  <p className="text-xs uppercase text-neutral-400">
+  <p className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
     Ready Around {readyTime.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
   </p>
 
@@ -349,10 +407,10 @@ export default function CartDrawer() {
       <button
         key={time.value}
         onClick={() => setPickupDate(time.date)}
-        className={`px-4 py-2 rounded-full border border-neutral-200 whitespace-nowrap transition ${
+        className={`px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition ${
           pickupDate.getTime() === time.date.getTime()
-            ? "bg-black text-white border-black"
-            : "bg-white text-neutral-700 hover:bg-neutral-50"
+            ? "bg-[var(--color-orange)] text-black border border-[var(--color-orange)]"
+            : "bg-neutral-100 text-[var(--color-charcoal)] border border-transparent hover:bg-neutral-200"
         }`}
       >
         {time.label}
@@ -371,7 +429,7 @@ export default function CartDrawer() {
         const selected = timeSlots.find(slot => slot.value === e.target.value)
         if (selected) setPickupDate(selected.date)
       }}
-      className="w-full border border-neutral-200 rounded-xl px-4 py-3 bg-white"
+      className="w-full border border-neutral-100 rounded-xl px-4 py-3 bg-white text-[var(--color-charcoal)] focus:border-[var(--color-orange)] focus:ring-1 focus:ring-[var(--color-orange)] focus:outline-none"
     >
 
       {timeSlots.map((slot) => (
@@ -390,7 +448,7 @@ export default function CartDrawer() {
 
           {phoneRequired && (
             <div>
-              <p className="text-xs uppercase text-neutral-400 mb-2">
+              <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
                 Phone Number Required
               </p>
 
@@ -407,7 +465,7 @@ export default function CartDrawer() {
                   }
                 }}
                 placeholder="Enter phone number"
-                className="w-full bg-neutral-100 rounded-xl px-4 py-3"
+                className="w-full bg-neutral-100 rounded-xl px-4 py-3 text-[var(--color-charcoal)] placeholder:text-[var(--color-muted)] focus:ring-2 focus:ring-[var(--color-orange)] focus:border-transparent focus:outline-none"
               />
             </div>
           )}
@@ -415,27 +473,27 @@ export default function CartDrawer() {
           {/* FUEL BALANCES */}
 
           {redemptionInCart && phone && (
-            <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 space-y-2">
-              <p className="text-sm font-semibold text-green-900">
+            <div className="bg-[var(--color-orange-light)]/50 border border-[var(--color-orange)]/20 rounded-xl px-4 py-4 space-y-2">
+              <p className="text-sm font-semibold text-[var(--color-charcoal)]">
                 Fuel Balance
               </p>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
                 <span>Medium</span>
                 <span>{fuelBalances.medium}</span>
               </div>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
                 <span>Large</span>
                 <span>{fuelBalances.large}</span>
               </div>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
                 <span>XL</span>
                 <span>{fuelBalances.xl}</span>
               </div>
 
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
                 <span>Jumbo</span>
                 <span>{fuelBalances.jumbo}</span>
               </div>
@@ -445,50 +503,64 @@ export default function CartDrawer() {
           {/* CART ITEMS */}
 
           {items.map((item) => (
-            <div key={item.id} className="border rounded-xl p-4">
+            <div key={item.id} className="border border-neutral-100 rounded-xl p-4">
 
-              <p className="font-medium">{item.itemName}</p>
+              <p className="font-medium text-[var(--color-charcoal)]">{item.itemName}</p>
 
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-[var(--color-muted)]">
                 {item.variationName}
               </p>
 
               {item.modifiers && item.modifiers.length > 0 && (
-                <p className="text-xs text-neutral-600 mt-1">
+                <p className="text-xs text-[var(--color-muted)] mt-1">
                   + {item.modifiers.map((m) => `${m.name}${(m.quantity ?? 1) > 1 ? ` (×${m.quantity})` : ""}`).join(", ")}
                 </p>
               )}
 
-              <div className="flex justify-between mt-3">
+              <div className="flex justify-between items-center mt-3">
 
-                <div className="flex gap-3">
+                <div className="flex items-center gap-2">
 
                   <button
+                    type="button"
                     onClick={() =>
                       updateQuantity(item.id, item.quantity - 1)
                     }
+                    className="w-9 h-9 rounded-full border border-neutral-100 flex items-center justify-center text-[var(--color-charcoal)] hover:bg-neutral-50 transition"
                   >
                     −
                   </button>
 
-                  <span>{item.quantity}</span>
+                  <span className="font-medium text-[var(--color-charcoal)] w-6 text-center">{item.quantity}</span>
 
                   <button
+                    type="button"
                     onClick={() =>
                       updateQuantity(item.id, item.quantity + 1)
                     }
+                    className="w-9 h-9 rounded-full border border-neutral-100 flex items-center justify-center text-[var(--color-charcoal)] hover:bg-neutral-50 transition"
                   >
                     +
                   </button>
 
                 </div>
 
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="text-red-500"
-                >
-                  Remove
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingCartItem(item)}
+                    className="text-sm text-[var(--color-orange)] hover:text-[var(--color-orange-dark)] font-medium transition"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="text-sm text-[var(--color-orange)] hover:text-[var(--color-orange-dark)] font-medium transition"
+                  >
+                    Remove
+                  </button>
+                </div>
 
               </div>
 
@@ -497,9 +569,9 @@ export default function CartDrawer() {
 
         </div>
 
-        {/* FOOTER */}
+        {/* FOOTER - v3 */}
 
-        <div className="border-t p-6">
+        <div className="border-t border-neutral-100 p-6">
 
           {checkoutError && (
             <p className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
@@ -507,12 +579,13 @@ export default function CartDrawer() {
             </p>
           )}
 
-          <div className="flex justify-between text-lg font-semibold mb-4">
+          <div className="flex justify-between text-lg font-semibold mb-4 text-[var(--color-charcoal)]">
             <span>Total</span>
             <span>${(getCartTotal() / 100).toFixed(2)}</span>
           </div>
 
           <button
+            type="button"
             onClick={handleCheckout}
             disabled={
               !orderingOpen ||
@@ -520,9 +593,9 @@ export default function CartDrawer() {
               checkingFuel
             }
             className={`w-full py-4 rounded-full font-semibold transition ${
-              orderingOpen && (!phoneRequired || phone.trim()) && selectedLocation
-                ? "bg-black text-white hover:bg-neutral-800"
-                : "bg-neutral-300 cursor-not-allowed"
+              orderingOpen && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
+                ? "bg-[var(--color-orange)] text-black hover:opacity-90"
+                : "bg-neutral-200 text-[var(--color-muted)] cursor-not-allowed"
             }`}
           >
             {!selectedLocation
@@ -545,6 +618,14 @@ export default function CartDrawer() {
       {showLocationGate && (
         <LocationGate onClose={() => setShowLocationGate(false)} />
       )}
+
+      <MenuItemModal
+        item={menuItemForEdit}
+        isOpen={Boolean(editingCartItem && menuItemForEdit)}
+        onClose={() => setEditingCartItem(null)}
+        existingCartItem={editingCartItem}
+        allMenuItems={menuItemsForEdit}
+      />
     </div>
   );
 }

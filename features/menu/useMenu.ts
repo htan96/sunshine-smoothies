@@ -60,14 +60,23 @@ export function useMenu() {
         const fetchedItems = data.items ?? [];
         const fetchedCategories = data.categories ?? [];
 
-        setItems(fetchedItems);
-        setCategories(fetchedCategories);
+        // Exclude Fuel Packs & Redemptions - they have their own /fuel page
+        const excludedCategories = ["Prepaid Packs", "Pack Redemptions"];
+        const filteredItems = fetchedItems.filter(
+          (i) => !excludedCategories.includes(i.categoryName ?? "")
+        );
+        const filteredCategories = fetchedCategories.filter((c) =>
+          filteredItems.some((i) => i.categoryId === c.id)
+        );
 
-        if (fetchedCategories.length > 0) {
+        setItems(filteredItems);
+        setCategories(filteredCategories);
+
+        if (filteredCategories.length > 0) {
 
           // If URL specifies category
           if (categoryParam) {
-            const match = fetchedCategories.find(
+            const match = filteredCategories.find(
               (c) =>
                 c.name.toLowerCase().replace(/\s+/g, "-") ===
                 categoryParam.toLowerCase()
@@ -76,12 +85,12 @@ export function useMenu() {
             if (match) {
               setActiveCategory(match.id);
             } else {
-              setActiveCategory(fetchedCategories[0].id);
+              setActiveCategory(filteredCategories[0].id);
             }
 
           } else {
             setActiveCategory(
-              (prev) => prev ?? fetchedCategories[0].id
+              (prev) => prev ?? filteredCategories[0].id
             );
           }
 

@@ -90,7 +90,7 @@ export default function ModifierSection({
   }
 
   return (
-    <div className="pb-6 border-b border-neutral-200">
+    <div className="pb-6 border-b border-neutral-100">
 
       <button
         onClick={() => setOpen(!open)}
@@ -127,13 +127,13 @@ export default function ModifierSection({
                 className={`px-4 py-2 rounded-full text-sm border transition
                 ${
                   selected
-                    ? "bg-black text-white border-black"
-                    : "bg-white border-neutral-300"
+                    ? "bg-[var(--color-orange)] text-black border-[var(--color-orange)]"
+                    : "bg-white border-neutral-100"
                 }
                 ${
                   disabledCombo
                     ? "opacity-40 cursor-not-allowed"
-                    : "hover:border-black"
+                    : "hover:border-neutral-200"
                 }`}
               >
                 {modifier.name}

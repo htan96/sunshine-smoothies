@@ -95,7 +95,7 @@ export default function CategoryTabs({
               className={`shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
                 active
                   ? "bg-[var(--color-orange)] text-white"
-                  : "bg-white text-[var(--color-charcoal)] border border-black/10 hover:border-[var(--color-orange)]/30 hover:bg-[var(--color-orange-light)]/50"
+                  : "bg-white text-[var(--color-charcoal)] border border-neutral-100 hover:border-[var(--color-orange)]/30 hover:bg-[var(--color-orange-light)]/50"
               }`}
             >
               {cat.name}

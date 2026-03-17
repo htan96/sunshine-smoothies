@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { nanoid } from "nanoid";
-import { useCartStore } from "@/features/cart/store";
+import { useCartStore, type CartItem } from "@/features/cart/store";
 import ModifierSection from "./ModifierSection";
 import ConsolidatedFruitVegSection from "./ConsolidatedFruitVegSection";
+import FuelPackDrinksSection from "./FuelPackDrinksSection";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
 
@@ -18,6 +19,10 @@ type Props = {
   item: MenuItem | null;
   isOpen: boolean;
   onClose: () => void;
+  /** When provided, modal opens in edit mode: pre-fills from cart item, saves via replaceItem */
+  existingCartItem?: CartItem | null;
+  /** All menu items - used to match fuel pack drink modifiers to items for names & photos */
+  allMenuItems?: MenuItem[];
 };
 
 const DUMMY_VARIATION: MenuVariation = {
@@ -27,9 +32,17 @@ const DUMMY_VARIATION: MenuVariation = {
   isSoldOut: false,
 };
 
-export default function MenuItemModal({ item, isOpen, onClose }: Props) {
+function isFuelPackDrinksList(name: string): boolean {
+  const n = name.toLowerCase();
+  return n.includes("fuel pack") && n.includes("drink");
+}
+
+export default function MenuItemModal({ item, isOpen, onClose, existingCartItem, allMenuItems = [] }: Props) {
   const addItem = useCartStore((state) => state.addItem);
+  const replaceItem = useCartStore((state) => state.replaceItem);
   const openCart = useCartStore((state) => state.openCart);
+
+  const isEditMode = Boolean(existingCartItem);
 
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -57,14 +70,31 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
 
   useEffect(() => {
     if (isOpen && item) {
-      const def =
-        item.variations.find((v) => v.name.toLowerCase() === "medium") ||
-        item.variations[0];
-      setSelectedVariation(def);
-      setSelectedModifiers({});
-      setQuantity(1);
+      if (existingCartItem) {
+        const variation =
+          item.variations.find((v) => v.id === existingCartItem.variationId) ||
+          item.variations.find((v) => v.name.toLowerCase() === "medium") ||
+          item.variations[0];
+        setSelectedVariation(variation ?? DUMMY_VARIATION);
+        const mods: Record<string, string[]> = {};
+        for (const m of existingCartItem.modifiers) {
+          const arr = mods[m.modifierListId] ?? [];
+          const count = m.quantity ?? 1;
+          for (let i = 0; i < count; i++) arr.push(m.modifierId);
+          mods[m.modifierListId] = arr;
+        }
+        setSelectedModifiers(mods);
+        setQuantity(existingCartItem.quantity);
+      } else {
+        const def =
+          item.variations.find((v) => v.name.toLowerCase() === "medium") ||
+          item.variations[0];
+        setSelectedVariation(def);
+        setSelectedModifiers({});
+        setQuantity(1);
+      }
     }
-  }, [isOpen, item?.id]);
+  }, [isOpen, item?.id, existingCartItem?.id]);
 
   if (!item) return null;
 
@@ -125,8 +155,7 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
       }
     );
 
-    addItem({
-      id: nanoid(),
+    const newItem = {
       itemId: item.id,
       itemName: item.name,
       image: item.image ?? undefined,
@@ -135,10 +164,19 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
       basePrice: selectedVariation.price,
       modifiers: formattedModifiers,
       quantity,
-    });
+    };
+
+    if (isEditMode && existingCartItem) {
+      replaceItem(existingCartItem.id, newItem);
+    } else {
+      addItem({
+        id: nanoid(),
+        ...newItem,
+      });
+    }
 
     onClose();
-    openCart();
+    if (!isEditMode) openCart();
   }
 
   const isFruitVeg = (name: string) => {
@@ -148,13 +186,14 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
       (n.includes("add") || n.includes("extra"))
     );
   };
+  const fuelPackDrinksList = item.modifiers.find((l) => isFuelPackDrinksList(l.name));
   const fruitVegLists = item.modifiers.filter((l) => isFruitVeg(l.name));
-  const otherLists = item.modifiers.filter((l) => !isFruitVeg(l.name));
+  const otherLists = item.modifiers.filter((l) => !isFruitVeg(l.name) && !isFuelPackDrinksList(l.name));
 
   const content = (
     <div className="flex flex-col max-h-[85vh] md:max-h-[90vh]">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b shrink-0">
+      <div className="flex items-center justify-between p-4 border-b border-neutral-100 shrink-0">
         <h2 className="text-lg font-semibold text-[var(--color-charcoal)] truncate pr-2">
           {item.name}
         </h2>
@@ -184,29 +223,49 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
           <p className="text-sm text-[var(--color-muted)]">{item.description}</p>
         )}
 
-        {/* Size */}
-        <div>
-          <h3 className="text-sm font-semibold mb-3">Size</h3>
-          <div className="space-y-2">
-            {item.variations.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setSelectedVariation(v)}
-                className={`w-full px-4 py-3 rounded-xl flex justify-between items-center text-left transition ${
-                  selectedVariation.id === v.id
-                    ? "bg-[var(--color-orange)] text-white"
-                    : "bg-neutral-100 hover:bg-neutral-200"
-                }`}
-              >
-                <span>{v.name}</span>
-                <span>${(v.price / 100).toFixed(2)}</span>
-              </button>
-            ))}
+        {/* Size - only show when more than one option */}
+        {item.variations.length > 1 && (
+          <div>
+            <h3 className="text-sm font-semibold mb-3">Size</h3>
+            <div className="space-y-2">
+              {item.variations.map((v) => (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setSelectedVariation(v)}
+                  className={`w-full px-4 py-3 rounded-xl flex justify-between items-center text-left transition ${
+                    selectedVariation.id === v.id
+                      ? "bg-[var(--color-orange)] text-black"
+                      : "bg-neutral-100 hover:bg-neutral-200"
+                  }`}
+                >
+                  <span>{v.name}</span>
+                  <span>${(v.price / 100).toFixed(2)}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Modifiers */}
+        {fuelPackDrinksList && allMenuItems.length > 0 && (
+          <FuelPackDrinksSection
+            list={fuelPackDrinksList}
+            selectedModifiers={selectedModifiers}
+            toggleModifier={toggleModifier}
+            allMenuItems={allMenuItems}
+          />
+        )}
+        {fuelPackDrinksList && allMenuItems.length === 0 && (
+          <ModifierSection
+            key={`${fuelPackDrinksList.id}-${selectedVariation.name}`}
+            list={fuelPackDrinksList}
+            selectedModifiers={selectedModifiers}
+            toggleModifier={toggleModifier}
+            selectedVariationName={selectedVariation.name}
+            itemDescription={item.description}
+          />
+        )}
         {fruitVegLists.length > 0 && (
           <ConsolidatedFruitVegSection
             itemModifiers={fruitVegLists}
@@ -228,7 +287,7 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t bg-white shrink-0 flex items-center justify-between gap-4">
+      <div className="p-4 border-t border-neutral-100 bg-white shrink-0 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -251,7 +310,7 @@ export default function MenuItemModal({ item, isOpen, onClose }: Props) {
           onClick={handleAddToCart}
           className="flex-1 py-3 px-6 rounded-full bg-[var(--color-orange)] text-black font-semibold hover:opacity-90 transition"
         >
-          Add to Order — ${(totalPrice / 100).toFixed(2)}
+          {isEditMode ? "Save changes" : "Add to Order"} — ${(totalPrice / 100).toFixed(2)}
         </button>
       </div>
     </div>

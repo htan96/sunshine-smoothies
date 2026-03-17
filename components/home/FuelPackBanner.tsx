@@ -14,7 +14,7 @@ export function FuelPackBanner() {
         </p>
         <p className="mt-2 font-semibold">Buy 7 → Get 10 Total</p>
         <Button
-          href="/menu?category=prepaid-packs"
+          href="/fuel"
           variant="white"
           className="mt-6"
         >

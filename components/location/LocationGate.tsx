@@ -54,11 +54,11 @@ export default function LocationGate({ onClose }: LocationGateProps) {
       <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
 
         <div className="p-6 border-b">
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-2xl font-semibold text-[var(--color-charcoal)]">
             Select Location
           </h1>
-          <p className="text-sm text-neutral-500 mt-1">
-            Choose where you'd like to order from
+          <p className="text-sm text-[var(--color-muted)] mt-1">
+            Choose where you&apos;d like to order from
           </p>
         </div>
 
@@ -66,22 +66,23 @@ export default function LocationGate({ onClose }: LocationGateProps) {
           {LOCATIONS.map((loc) => (
             <button
               key={loc.id}
+              type="button"
               disabled={!loc.enabled}
               onClick={() => setSelectedId(loc.id)}
               className={`w-full border rounded-xl p-4 text-left transition ${
                 selectedId === loc.id
-                  ? "border-black bg-neutral-100"
-                  : "border-neutral-200"
+                  ? "border-[var(--color-orange)] bg-[var(--color-orange-light)]/50"
+                  : "border-neutral-200 hover:border-[var(--color-orange)]/50"
               } ${
                 !loc.enabled
                   ? "opacity-40 cursor-not-allowed"
-                  : "hover:border-black"
+                  : ""
               }`}
             >
-              <p className="font-semibold text-lg">
+              <p className="font-semibold text-lg text-[var(--color-charcoal)]">
                 {loc.name}
               </p>
-              <p className="text-sm text-neutral-500">
+              <p className="text-sm text-[var(--color-muted)]">
                 {loc.address}
               </p>
             </button>
@@ -90,9 +91,10 @@ export default function LocationGate({ onClose }: LocationGateProps) {
 
         <div className="p-6 border-t">
           <button
+            type="button"
             disabled={!selected}
             onClick={handleContinue}
-            className="w-full bg-black text-white py-3 rounded-xl font-medium transition hover:bg-neutral-800 disabled:opacity-30"
+            className="w-full py-3 rounded-xl font-medium transition disabled:opacity-30 disabled:cursor-not-allowed bg-[var(--color-orange)] text-black hover:opacity-90 disabled:bg-neutral-200 disabled:text-[var(--color-muted)]"
           >
             Continue
           </button>

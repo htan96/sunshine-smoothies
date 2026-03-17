@@ -139,7 +139,7 @@ export default function ConsolidatedFruitVegSection({
   }
 
   return (
-    <div className="pb-6 border-b border-neutral-200">
+    <div className="pb-6 border-b border-neutral-100">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center text-left"
@@ -168,8 +168,8 @@ export default function ConsolidatedFruitVegSection({
                       onClick={() => toggleModifier(list, opt.id)}
                       className={`px-4 py-2 rounded-full text-sm border transition ${
                         selected
-                          ? "bg-black text-white border-black"
-                          : "bg-white border-neutral-300 hover:border-black"
+                          ? "bg-[var(--color-orange)] text-black border-[var(--color-orange)]"
+                          : "bg-white border-neutral-100 hover:border-neutral-200"
                       }`}
                     >
                       {opt.name}
@@ -195,8 +195,8 @@ export default function ConsolidatedFruitVegSection({
                       onClick={() => toggleModifier(list, opt.id)}
                       className={`px-4 py-2 rounded-full text-sm border transition ${
                         selected
-                          ? "bg-black text-white border-black"
-                          : "bg-white border-neutral-300 hover:border-black"
+                          ? "bg-[var(--color-orange)] text-black border-[var(--color-orange)]"
+                          : "bg-white border-neutral-100 hover:border-neutral-200"
                       }`}
                     >
                       {opt.name}

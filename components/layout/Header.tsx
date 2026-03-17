@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/features/cart/store";
 
-const ORANGE = "#F4A024"; /* matches v3 design token */
-
 export default function Header() {
   const itemCount = useCartStore((state) =>
     state.getItemCount()
@@ -38,6 +36,10 @@ export default function Header() {
             Menu
           </Link>
 
+          <Link href="/fuel" className="hover:text-[var(--color-orange)] transition">
+            Fuel Packs
+          </Link>
+
           <Link href="/about" className="hover:text-[var(--color-orange)] transition">
             About
           </Link>
@@ -61,11 +63,7 @@ export default function Header() {
           >
             <svg
               viewBox="0 0 24 24"
-              className="w-8 h-8 transition-all duration-200"
-              style={{
-                stroke: hasItems ? ORANGE : "currentColor",
-                fill: hasItems ? ORANGE : "none",
-              }}
+              className={`w-8 h-8 transition-all duration-200 ${hasItems ? "stroke-[var(--color-orange)] fill-[var(--color-orange)]" : "stroke-current fill-none"}`}
               strokeWidth="1.8"
             >
               <path
@@ -78,10 +76,7 @@ export default function Header() {
             </svg>
 
             {hasItems && (
-              <span
-                className="absolute -top-2 -right-2 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md"
-                style={{ backgroundColor: ORANGE }}
-              >
+              <span className="absolute -top-2 -right-2 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md bg-[var(--color-orange)]">
                 {itemCount}
               </span>
             )}

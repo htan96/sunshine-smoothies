@@ -4,6 +4,21 @@ import { squareClient } from "./squareClient";
 import type { CatalogObject } from "square";
 import { fetchInStockVariationIds } from "./inventory";
 
+/** Fetch full catalog via list (paginated) - use when you need all items/variations */
+export async function fetchFullCatalog(): Promise<CatalogObject[]> {
+  const objects: CatalogObject[] = [];
+  let cursor: string | undefined = undefined;
+
+  do {
+    const res = await squareClient.catalog.list({ cursor });
+    const page = (res as any).objects ?? (res as any).result?.objects ?? [];
+    objects.push(...page);
+    cursor = (res as any).cursor ?? (res as any).result?.cursor ?? undefined;
+  } while (cursor);
+
+  return objects;
+}
+
 export async function fetchCatalogItems(): Promise<CatalogObject[]> {
   const response = await squareClient.catalog.search({
     objectTypes: ["ITEM"],

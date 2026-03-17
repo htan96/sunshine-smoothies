@@ -22,14 +22,19 @@ export type CartItem = {
 type CartStore = {
   items: CartItem[];
   isOpen: boolean;
+  checkoutModalOpen: boolean;
 
   openCart: () => void;
+  openCartDrawer: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+  openCheckoutModal: () => void;
+  closeCheckoutModal: () => void;
 
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void; // 🔥 added
+  replaceItem: (cartItemId: string, newItem: Omit<CartItem, "id">) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
 
   getItemCount: () => number;
@@ -41,11 +46,27 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      checkoutModalOpen: false,
 
-      openCart: () => set({ isOpen: true }),
+      openCart: () =>
+        set((state) => {
+          const testingMode =
+            process.env.NEXT_PUBLIC_CHECKOUT_TESTING_MODE === "true";
+          if (testingMode) return { checkoutModalOpen: true };
+          return { isOpen: true };
+        }),
+      openCartDrawer: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () =>
-        set((state) => ({ isOpen: !state.isOpen })),
+        set((state) => {
+          const testingMode =
+            process.env.NEXT_PUBLIC_CHECKOUT_TESTING_MODE === "true";
+          if (testingMode)
+            return { checkoutModalOpen: !state.checkoutModalOpen };
+          return { isOpen: !state.isOpen };
+        }),
+      openCheckoutModal: () => set({ checkoutModalOpen: true }),
+      closeCheckoutModal: () => set({ checkoutModalOpen: false }),
 
       addItem: (newItem) =>
         set((state) => {
@@ -57,6 +78,9 @@ export const useCartStore = create<CartStore>()(
                 JSON.stringify(newItem.modifiers)
           );
 
+          const testingMode =
+            process.env.NEXT_PUBLIC_CHECKOUT_TESTING_MODE === "true";
+
           if (existingIndex !== -1) {
             const updatedItems = [...state.items];
             updatedItems[existingIndex].quantity +=
@@ -64,13 +88,17 @@ export const useCartStore = create<CartStore>()(
 
             return {
               items: updatedItems,
-              isOpen: true,
+              ...(testingMode
+                ? { checkoutModalOpen: true }
+                : { isOpen: true }),
             };
           }
 
           return {
             items: [...state.items, newItem],
-            isOpen: true,
+            ...(testingMode
+              ? { checkoutModalOpen: true }
+              : { isOpen: true }),
           };
         }),
 
@@ -78,6 +106,16 @@ export const useCartStore = create<CartStore>()(
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
         })),
+
+      replaceItem: (cartItemId, newItem) =>
+        set((state) => {
+          const filtered = state.items.filter((i) => i.id !== cartItemId);
+          const updated = [
+            ...filtered,
+            { ...newItem, id: cartItemId },
+          ];
+          return { items: updated };
+        }),
 
       updateQuantity: (id, quantity) =>
         set((state) => ({
