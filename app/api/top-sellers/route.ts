@@ -11,7 +11,8 @@ export async function GET() {
   try {
 
     const locationIds =
-      process.env.SQUARE_LOCATION_IDS?.split(",").filter(Boolean) ?? [];
+      process.env.SQUARE_LOCATION_IDS?.split(",").filter(Boolean) ??
+      (process.env.SQUARE_LOCATION_ID ? [process.env.SQUARE_LOCATION_ID] : []);
 
     const locationId = locationIds[0];
 
@@ -19,7 +20,7 @@ export async function GET() {
       return NextResponse.json({
         success: false,
         items: [],
-        error: "SQUARE_LOCATION_IDS not configured",
+        error: "SQUARE_LOCATION_IDS or SQUARE_LOCATION_ID not configured",
       });
     }
 
@@ -32,21 +33,25 @@ export async function GET() {
 
     /*
     ==========================
-    Fetch orders
+    Fetch orders (COMPLETED only, sorted by created_at)
     ==========================
     */
 
     do {
-
       const res = await squareClient.orders.search({
         locationIds,
         cursor,
         limit: 500,
         query: {
           filter: {
+            stateFilter: { states: ["COMPLETED"] },
             dateTimeFilter: {
               createdAt: { startAt },
             },
+          },
+          sort: {
+            sortField: "CREATED_AT",
+            sortOrder: "DESC",
           },
         },
       });
@@ -59,7 +64,7 @@ export async function GET() {
 
     /*
     ==========================
-    Count variation sales
+    Count quantity per variation (Square line items use variation ID)
     ==========================
     */
 
@@ -67,65 +72,66 @@ export async function GET() {
 
     for (const order of allOrders) {
       for (const line of order.lineItems ?? []) {
+        const variationId = line.catalogObjectId;
+        if (!variationId) continue;
 
-        const id = line.catalogObjectId;
-        if (!id) continue;
-
-        variationCounts[id] =
-          (variationCounts[id] ?? 0) +
-          Number(line.quantity ?? 1);
+        variationCounts[variationId] =
+          (variationCounts[variationId] ?? 0) + Number(line.quantity ?? 1);
       }
     }
 
-/*
-==========================
-Fetch catalog
-==========================
-*/
-
-const catalog = await (squareClient.catalog as any).search({
-  query: {
-    objectTypes: [
-      "ITEM",
-      "IMAGE",
-      "CATEGORY",
-      "MODIFIER_LIST",
-      "ITEM_VARIATION",
-    ],
-  },
-});
-
-const objects = catalog.objects ?? [];
-
-const { transformCatalog } = await import("@/features/menu/transform");
-
-const { items } = transformCatalog(objects, locationId);
     /*
     ==========================
-    Score items
+    Load catalog (same source as menu for consistency)
+    ==========================
+    */
+
+    const items = await loadMenu(locationId);
+
+    /*
+    ==========================
+    Aggregate by item (sum all sizes/variations)
     ==========================
     */
 
     const scored = items.map((item) => {
-
-      let sales = 0;
-
+      let totalQuantity = 0;
       for (const variation of item.variations) {
-        sales += variationCounts[variation.id] ?? 0;
+        totalQuantity += variationCounts[variation.id] ?? 0;
       }
-
       return {
         id: item.id,
         name: item.name,
         image: item.image,
-        sales,
+        sales: totalQuantity,
       };
     });
 
-    const topItems = scored
+    let topItems = scored
       .filter((i) => i.sales > 0)
       .sort((a, b) => b.sales - a.sales)
       .slice(0, 6);
+
+    // Fallback: when no sales data, show featured items from menu
+    if (topItems.length === 0) {
+      topItems = items
+        .filter((i) => i.categoryName?.toLowerCase().includes("smoothie"))
+        .slice(0, 6)
+        .map((i) => ({
+          id: i.id,
+          name: i.name,
+          image: i.image ?? null,
+          sales: 0,
+        }));
+      if (topItems.length === 0) {
+        topItems = items.slice(0, 6).map((i) => ({
+          id: i.id,
+          name: i.name,
+          image: i.image ?? null,
+          sales: 0,
+        }));
+      }
+    }
 
     return NextResponse.json({
       success: true,

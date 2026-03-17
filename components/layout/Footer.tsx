@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Utensils, MapPin, Home } from "lucide-react"
+import { Utensils, MapPin, Home, Calendar } from "lucide-react"
 
 export default function Footer() {
   return (
@@ -30,6 +30,14 @@ export default function Footer() {
         >
           <MapPin size={22} />
           <span className="text-xs mt-1">Locations</span>
+        </Link>
+
+        <Link
+          href="/events"
+          className="flex flex-col items-center text-gray-700 hover:text-yellow-500 transition"
+        >
+          <Calendar size={22} />
+          <span className="text-xs mt-1">Events</span>
         </Link>
 
       </div>

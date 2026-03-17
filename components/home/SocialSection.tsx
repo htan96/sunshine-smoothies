@@ -11,7 +11,7 @@ const SOCIAL_LINKS = {
 
 export default function SocialSection() {
   return (
-    <section className="relative bg-black text-white py-28">
+    <section className="relative bg-[var(--color-charcoal)] text-white py-28">
       
       <div className="absolute top-0 left-0 w-full h-px bg-white/10" />
 
