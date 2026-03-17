@@ -8,7 +8,7 @@ export default function EventsThanks() {
 
         <p className="mt-6 text-gray-700 leading-relaxed text-lg">
           Free Smoothie Day wouldn&apos;t be what it is without{" "}
-          <span className="font-semibold text-gray-900">La Russel</span> and
+          <span className="font-semibold text-gray-900">Larussel</span> and
           the many artists who stepped up to make it happen. Their dedication to
           our community helped turn this idea into reality — and we&apos;re
           grateful for every one of them.

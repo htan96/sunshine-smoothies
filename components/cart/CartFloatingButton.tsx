@@ -1,5 +1,6 @@
 "use client";
 
+import { clsx } from "clsx";
 import { useCartStore } from "@/features/cart/store";
 
 /* v3 design token */
@@ -14,8 +15,12 @@ export default function CartFloatingButton() {
     <button
       onClick={openCart}
       aria-label={`Cart${hasItems ? ` (${itemCount} items)` : ""}`}
-      className="md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform active:scale-95"
-      className={hasItems ? "bg-[var(--color-orange)] text-black border-2 border-[var(--color-orange)]" : "bg-white text-[var(--color-charcoal)] border-2 border-neutral-100"}
+      className={clsx(
+        "md:hidden fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform active:scale-95",
+        hasItems
+          ? "bg-[var(--color-orange)] text-black border-2 border-[var(--color-orange)]"
+          : "bg-white text-[var(--color-charcoal)] border-2 border-neutral-100"
+      )}
     >
       <svg
         viewBox="0 0 24 24"
