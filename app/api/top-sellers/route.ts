@@ -11,9 +11,17 @@ export async function GET() {
   try {
 
     const locationIds =
-      process.env.SQUARE_LOCATION_IDS?.split(",") ?? [];
+      process.env.SQUARE_LOCATION_IDS?.split(",").filter(Boolean) ?? [];
 
     const locationId = locationIds[0];
+
+    if (!locationId || locationIds.length === 0) {
+      return NextResponse.json({
+        success: false,
+        items: [],
+        error: "SQUARE_LOCATION_IDS not configured",
+      });
+    }
 
     const startAt = new Date(
       Date.now() - 1000 * 60 * 60 * 24 * 30
@@ -120,13 +128,9 @@ const { items } = transformCatalog(objects, locationId);
       .slice(0, 6);
 
     return NextResponse.json({
-  success: true,
-  ordersAnalyzed: allOrders.length,
-  variationIds: Object.keys(variationCounts).slice(0, 10),
-  menuItemsCount: items.length,
-  firstMenuItem: items[0] ?? null,
-  items: topItems,
-});
+      success: true,
+      items: topItems,
+    });
 
   } catch (error) {
 

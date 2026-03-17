@@ -1,9 +1,9 @@
 export default function AboutQuality() {
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-neutral-50">
       <div className="max-w-3xl mx-auto px-6">
 
-        <h2 className="text-3xl font-semibold text-gray-900">
+        <h2 className="text-3xl font-semibold text-[var(--color-charcoal)]">
           Our Commitment to Quality
         </h2>
 
@@ -20,7 +20,7 @@ export default function AboutQuality() {
           built on trust, learning, and respect for the land.
         </p>
         
-        <div className="mt-4 inline-block px-4 py-2 rounded-lg bg-amber-50 text-amber-900 text-sm shadow-sm">
+        <div className="mt-4 inline-block px-4 py-2 rounded-lg bg-[var(--color-orange-light)] text-[var(--color-orange-dark)] text-sm shadow-sm">
           🌾 Partnered with Rojas Family Farm • Fresno, California
         </div>
         <p className="mt-6 text-gray-700 leading-relaxed text-lg">

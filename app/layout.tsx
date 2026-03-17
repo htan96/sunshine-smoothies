@@ -1,9 +1,23 @@
 "use client";
 
+import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-poppins",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-inter",
+});
 import Footer from "@/components/layout/Footer";
 import CartDrawer from "@/components/cart/CartDrawer";
+import CartFloatingButton from "@/components/cart/CartFloatingButton";
 import { useLocationStore } from "@/features/location/store";
 
 export default function RootLayout({
@@ -90,7 +104,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <head>
   <title>Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo</title>
 
@@ -118,6 +132,9 @@ export default function RootLayout({
         <main>{children}</main>
 
         <Footer />
+
+        {/* Mobile: Sticky floating cart button */}
+        <CartFloatingButton />
 
         {/* Cart Drawer mounted globally */}
         <CartDrawer />

@@ -17,24 +17,24 @@ export default function AboutOwner() {
 
         {/* Text */}
         <div>
-          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900">
+          <h2 className="text-3xl md:text-4xl font-semibold text-[var(--color-charcoal)]">
             Meet Carlos
           </h2>
 
-          <div className="h-[3px] w-14 bg-yellow-400 mt-4 mb-6" />
+          <div className="h-[3px] w-14 bg-[var(--color-orange)] mt-4 mb-6" />
 
           <p className="text-gray-700 leading-relaxed text-lg">
             Sunshine Smoothies is built on more than ingredients — it's built on community.
           </p>
 
-          <p className="mt-6 text-gray-700 leading-relaxed text-lg">
+          <p className="mt-6 text-[var(--color-muted)] leading-relaxed text-lg">
             Carlos has always believed that if you show up for your people,
             your people will show up for you. From supporting youth boxing programs
             to sponsoring local schools and athletics, his mission has never been
             just about business — it’s about impact.
           </p>
 
-          <blockquote className="mt-8 border-l-4 border-yellow-400 pl-6 italic text-gray-600">
+          <blockquote className="mt-8 border-l-4 border-[var(--color-orange)] pl-6 italic text-[var(--color-muted)]">
             “Carlos has been a pillar in the community and has always been in our corner.”
           </blockquote>
 

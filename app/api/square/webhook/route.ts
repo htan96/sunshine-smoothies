@@ -1,13 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 import { handleFuelOrder } from "@/lib/fuel/engine";
 import { squareClient } from "@/lib/square/client";
 import { supabase } from "@/lib/supabase";
 
+function verifyWebhookSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  signatureKey: string | undefined,
+  notificationUrl: string
+): boolean {
+  if (!signatureKey || !signatureHeader) return false;
+
+  const payload = notificationUrl + rawBody;
+  const expected = createHmac("sha256", signatureKey)
+    .update(payload)
+    .digest("base64");
+
+  if (expected.length !== signatureHeader.length) return false;
+  try {
+    return timingSafeEqual(
+      Buffer.from(expected, "base64"),
+      Buffer.from(signatureHeader, "base64")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+    const signatureHeader = req.headers.get("x-square-hmacsha256-signature");
+    const signatureKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
+    const notificationUrl = process.env.SQUARE_WEBHOOK_NOTIFICATION_URL;
 
-    console.log("WEBHOOK BODY:", JSON.stringify(body, null, 2));
+    if (signatureKey && notificationUrl) {
+      if (!verifyWebhookSignature(rawBody, signatureHeader, signatureKey, notificationUrl)) {
+        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      }
+    }
+
+    const body = JSON.parse(rawBody);
 
     if (body.type !== "order.updated") {
       return NextResponse.json({ received: true });
@@ -16,18 +50,14 @@ export async function POST(req: NextRequest) {
     const orderState = body?.data?.object?.order_updated?.state;
 
     if (orderState !== "COMPLETED") {
-      console.log("Order not completed yet");
       return NextResponse.json({ received: true });
     }
 
     const orderId = body?.data?.object?.order_updated?.order_id;
 
     if (!orderId) {
-      console.log("No orderId found in webhook");
       return NextResponse.json({ received: true });
     }
-
-    console.log("Retrieving order:", orderId);
 
     // Prevent duplicate processing
     const { data: existing } = await supabase
@@ -37,7 +67,6 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (existing) {
-      console.log("Order already processed:", orderId);
       return NextResponse.json({ received: true });
     }
 
@@ -48,11 +77,8 @@ export async function POST(req: NextRequest) {
     const order = response.order;
 
     if (!order) {
-      console.log("Square returned no order");
       return NextResponse.json({ received: true });
     }
-
-    console.log("Order retrieved:", order.id);
 
     await handleFuelOrder(order);
 
@@ -63,7 +89,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Webhook error:", error);
 
     return NextResponse.json(
       { error: "Webhook failed" },

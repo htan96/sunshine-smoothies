@@ -32,12 +32,18 @@ const REDEEM_VARIATIONS = {
   JUMBO: "7XQ7EXVJELMIM63UDTLMLAC7",
 };
 
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  if (phone.startsWith("+")) return phone;
+  return `+${digits}`;
+}
+
 export async function POST(req: Request) {
   try {
 
     const body = await req.json();
-
-    console.log("CHECKOUT BODY:", body);
 
     const {
       items,
@@ -95,11 +101,21 @@ export async function POST(req: Request) {
 
     const phoneRequired = redemptionInCart || fuelPackInCart;
 
-    if (phoneRequired && !phone) {
-      return NextResponse.json(
-        { error: "Phone number required" },
-        { status: 400 }
-      );
+    if (phoneRequired) {
+      if (!phone || !phone.trim()) {
+        return NextResponse.json(
+          { error: "Phone number required" },
+          { status: 400 }
+        );
+      }
+      const digits = phone.replace(/\D/g, "");
+      const valid = digits.length === 10 || (digits.length === 11 && digits.startsWith("1"));
+      if (!valid) {
+        return NextResponse.json(
+          { error: "Please enter a valid 10-digit phone number" },
+          { status: 400 }
+        );
+      }
     }
 
     /* -------------------------------- */
@@ -118,11 +134,25 @@ export async function POST(req: Request) {
     /* -------------------------------- */
 
     const lineItems = items
-      .filter((item:any) => item.quantity > 0)
-      .map((item:any) => ({
-        quantity: String(item.quantity),
-        catalogObjectId: item.variationId
-      }));
+      .filter((item: any) => item.quantity > 0)
+      .map((item: any) => {
+        const lineItem: {
+          quantity: string;
+          catalogObjectId: string;
+          modifiers?: { catalogObjectId: string; quantity?: string; name?: string }[];
+        } = {
+          quantity: String(item.quantity),
+          catalogObjectId: item.variationId,
+        };
+        if (item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0) {
+          lineItem.modifiers = item.modifiers.map((m: { modifierId: string; quantity?: number; name?: string }) => ({
+            catalogObjectId: m.modifierId,
+            quantity: String(m.quantity ?? 1),
+            name: m.name,
+          }));
+        }
+        return lineItem;
+      });
 
     if (!lineItems.length) {
       return NextResponse.json(
@@ -130,8 +160,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    console.log("SQUARE LINE ITEMS:", lineItems);
 
     /* -------------------------------- */
     /* Ensure Square Customer           */
@@ -143,11 +171,13 @@ export async function POST(req: Request) {
 
       try {
 
+        const normalizedPhone = normalizePhone(phone);
+
         const search = await squareClient.customers.search({
           query: {
             filter: {
               phoneNumber: {
-                exact: `+1${phone}`
+                exact: normalizedPhone
               }
             }
           }
@@ -161,7 +191,7 @@ export async function POST(req: Request) {
 
           const created =
             await squareClient.customers.create({
-              phoneNumber: `+1${phone}`
+              phoneNumber: normalizedPhone
             });
 
           customerId = created.customer?.id ?? null;
@@ -169,7 +199,7 @@ export async function POST(req: Request) {
         }
 
       } catch (error) {
-        console.error("Customer lookup failed:", error);
+        // Customer lookup/create failed - continue without customerId
       }
     }
 
@@ -192,6 +222,14 @@ if (notes && notes.trim() !== "") metadata.notes = notes;
     /* -------------------------------- */
     /* Create Payment Link              */
     /* -------------------------------- */
+
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    if (!baseUrl) {
+      return NextResponse.json(
+        { error: "Server misconfiguration: missing NEXT_PUBLIC_BASE_URL" },
+        { status: 500 }
+      );
+    }
 
     const paymentLinkResponse =
       await squareClient.checkout.paymentLinks.create({
@@ -216,8 +254,7 @@ if (notes && notes.trim() !== "") metadata.notes = notes;
         },
 
         checkoutOptions: {
-          redirectUrl:
-            `${process.env.NEXT_PUBLIC_BASE_URL}/ordersuccess`,
+          redirectUrl: `${baseUrl}/ordersuccess`,
         }
 
       });
@@ -228,14 +265,11 @@ if (notes && notes.trim() !== "") metadata.notes = notes;
       url: paymentLink?.url
     });
 
-  } catch (error:any) {
-
-    console.error("Checkout error:", error);
-
+  } catch (error: unknown) {
+    console.error("Checkout failed:", error);
     return NextResponse.json(
-      { error: "Checkout failed" },
+      { error: "Checkout failed. Please try again." },
       { status: 500 }
     );
-
   }
 }

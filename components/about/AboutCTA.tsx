@@ -13,7 +13,7 @@ export default function AboutCTA() {
 
         <a
           href="/community"
-          className="inline-block mt-8 rounded-full bg-yellow-400 px-8 py-3 font-semibold text-black hover:bg-yellow-500 transition"
+          className="inline-block mt-8 rounded-full bg-[var(--color-orange)] px-8 py-3 font-semibold text-black hover:bg-[var(--color-orange-dark)] transition"
         >
           Explore Our Community Impact
         </a>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
 import ModifierSection from "./ModifierSection";
+import ConsolidatedFruitVegSection from "./ConsolidatedFruitVegSection";
 
 import type {
   MenuItem,
@@ -181,16 +182,43 @@ export default function MenuItemDetail({ item }: Props) {
               </div>
             </div>
 
-            {item.modifiers.map((list) => (
-              <ModifierSection
-  key={`${list.id}-${selectedVariation.name}`}
-  list={list}
-  selectedModifiers={selectedModifiers}
-  toggleModifier={toggleModifier}
-  selectedVariationName={selectedVariation.name}
-  itemDescription={item.description}
-/>
-            ))}
+            {(() => {
+              const isFruitVeg = (name: string) => {
+                const n = name.toLowerCase();
+                return (
+                  (n.includes("fruit") || n.includes("vegetable")) &&
+                  (n.includes("add") || n.includes("extra"))
+                );
+              };
+              const fruitVegLists = item.modifiers.filter((l) =>
+                isFruitVeg(l.name)
+              );
+              const otherLists = item.modifiers.filter(
+                (l) => !isFruitVeg(l.name)
+              );
+              return (
+                <>
+                  {fruitVegLists.length > 0 && (
+                    <ConsolidatedFruitVegSection
+                      itemModifiers={fruitVegLists}
+                      itemDescription={item.description}
+                      selectedModifiers={selectedModifiers}
+                      toggleModifier={toggleModifier}
+                    />
+                  )}
+                  {otherLists.map((list) => (
+                    <ModifierSection
+                      key={`${list.id}-${selectedVariation.name}`}
+                      list={list}
+                      selectedModifiers={selectedModifiers}
+                      toggleModifier={toggleModifier}
+                      selectedVariationName={selectedVariation.name}
+                      itemDescription={item.description}
+                    />
+                  ))}
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>

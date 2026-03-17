@@ -1,20 +1,26 @@
 "use client";
 
-import Link from "next/link";
 import type { MenuItem } from "@/features/menu/types";
 
 type Props = {
   item: MenuItem;
+  onClick: () => void;
 };
 
-export default function MenuItemCard({ item }: Props) {
+export default function MenuItemCard({ item, onClick }: Props) {
+  const minPrice = item.variations.reduce(
+    (min, v) => Math.min(min, v.price),
+    item.variations[0]?.price ?? 0
+  );
+
   return (
-    <Link
-      href={`/menu/${item.id}`}
-      className="block bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden"
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.07)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col"
     >
       {/* IMAGE */}
-      <div className="aspect-square bg-neutral-100 flex items-center justify-center">
+      <div className="aspect-square bg-neutral-100 flex items-center justify-center shrink-0">
         {item.image ? (
           <img
             src={item.image}
@@ -22,18 +28,22 @@ export default function MenuItemCard({ item }: Props) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="text-neutral-400 text-sm">
-            Coming Soon
-          </span>
+          <span className="text-neutral-400 text-sm">Coming Soon</span>
         )}
       </div>
 
-      {/* NAME */}
-      <div className="p-4 text-center">
-        <h3 className="font-semibold text-lg">
+      {/* NAME & PRICE */}
+      <div className="p-4 flex flex-col flex-1 min-h-0">
+        <h3 className="font-medium text-[var(--color-charcoal)] line-clamp-2">
           {item.name.replace(/-/g, " ")}
         </h3>
+        <span className="font-semibold text-[var(--color-charcoal)] mt-2">
+          From ${(minPrice / 100).toFixed(2)}
+        </span>
+        <span className="mt-auto pt-3 text-[var(--color-orange)] font-medium text-sm">
+          Customize & Add
+        </span>
       </div>
-    </Link>
+    </button>
   );
 } 

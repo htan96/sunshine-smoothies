@@ -32,20 +32,20 @@ export default function LocationPage() {
     <main className="bg-white">
 
       {/* ===== HERO HEADER ===== */}
-      <section className="pt-28 pb-16 text-center border-b border-gray-100">
+      <section className="pt-28 pb-16 text-center border-b border-neutral-100">
         <div className="max-w-4xl mx-auto px-6">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-[var(--color-charcoal)]">
             Visit Sunshine Smoothies
           </h1>
-          <div className="h-[3px] w-16 bg-yellow-400 mx-auto mt-5 rounded-full" />
-          <p className="mt-6 text-lg text-gray-600">
+          <div className="h-[3px] w-16 bg-[var(--color-orange)] mx-auto mt-5 rounded-full" />
+          <p className="mt-6 text-lg text-[var(--color-muted)]">
             Two locations. Same great energy.
           </p>
         </div>
       </section>
 
       {/* ===== SOLANO STOREFRONT ===== */}
-      <section className="relative w-full h-[550px]">
+      <section className="relative w-full min-h-[400px] md:h-[500px] lg:h-[550px]">
         <Image
           src="/locations/solano.png"
           alt="Solano Avenue Storefront"
@@ -56,19 +56,24 @@ export default function LocationPage() {
 
         <div className="absolute inset-0 bg-black/60 flex items-center">
           <div className="max-w-6xl mx-auto px-6 text-white">
-            <h2 className="text-4xl font-bold">
+            <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-sm font-medium mb-3">
+              Storefront
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold">
               Solano Avenue Storefront
             </h2>
 
-            <p className="mt-3 text-lg">
+            <p className="mt-3 text-lg opacity-90">
               2089 Solano Ave, Vallejo, CA
             </p>
 
-            <p className="text-lg">Open Daily</p>
-            <p className="text-lg">8:00AM – 7:00PM</p>
+            <p className="mt-1 text-white/90">
+              Open Daily • 8:00AM – 7:00PM
+            </p>
 
             <div className="mt-6 flex gap-4 flex-wrap">
               <button
+                type="button"
                 onClick={() =>
                   openMaps("2089 Solano Ave, Vallejo, CA")
                 }
@@ -78,6 +83,7 @@ export default function LocationPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() =>
                   handleOrder({
                     id: "L6W05ZHRQZB3H",
@@ -85,7 +91,7 @@ export default function LocationPage() {
                     address: "2089 Solano Ave, Vallejo",
                   })
                 }
-                className="bg-yellow-400 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-500 transition"
+                className="bg-[var(--color-orange)] text-black px-6 py-3 rounded-full font-semibold hover:opacity-90 transition"
               >
                 Order Now
               </button>
@@ -97,7 +103,7 @@ export default function LocationPage() {
       <div className="h-8 bg-white" />
 
       {/* ===== WATERFRONT DRIVE-THRU ===== */}
-      <section className="relative w-full h-[550px]">
+      <section className="relative w-full min-h-[400px] md:h-[500px] lg:h-[550px]">
         <Image
           src="/locations/waterfront.png"
           alt="Waterfront Drive-Thru"
@@ -107,20 +113,25 @@ export default function LocationPage() {
 
         <div className="absolute inset-0 bg-black/60 flex items-center">
           <div className="max-w-6xl mx-auto px-6 text-white">
-            <h2 className="text-4xl font-bold">
+            <span className="inline-block px-3 py-1 rounded-full bg-[var(--color-orange)]/90 text-black text-sm font-semibold mb-3">
+              Drive-Thru Available
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold">
               Waterfront Drive-Thru
             </h2>
 
-            <p className="mt-3 text-lg">
+            <p className="mt-3 text-lg opacity-90">
               821 Wilson Ave, Vallejo, CA
             </p>
 
-            <p className="text-lg">Open Daily</p>
-            <p className="text-lg">Monday - Friday 7AM – 7PM</p>
-            <p className="text-lg">Saturday - Sunday 8AM - 7PM</p>
+            <div className="mt-1 text-white/90 space-y-0.5">
+              <p>Mon – Fri: 7:00AM – 7:00PM</p>
+              <p>Sat – Sun: 8:00AM – 7:00PM</p>
+            </div>
 
             <div className="mt-6 flex gap-4 flex-wrap">
               <button
+                type="button"
                 onClick={() =>
                   openMaps("821 Wilson Ave, Vallejo, CA")
                 }
@@ -130,6 +141,7 @@ export default function LocationPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() =>
                   handleOrder({
                     id: "5PHZ3HJ8ZJCQ0",
@@ -137,7 +149,7 @@ export default function LocationPage() {
                     address: "821 Wilson Ave, Vallejo",
                   })
                 }
-                className="bg-yellow-400 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-500 transition"
+                className="bg-[var(--color-orange)] text-black px-6 py-3 rounded-full font-semibold hover:opacity-90 transition"
               >
                 Order Now
               </button>

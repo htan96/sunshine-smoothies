@@ -6,11 +6,11 @@ export default function CommunityMoments() {
       <div className="max-w-6xl mx-auto px-6">
 
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#0f172a] mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-charcoal)] mb-4">
             Community In Action
           </h2>
 
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-[var(--color-muted)] max-w-2xl mx-auto">
             From school visits to youth sponsorships, we believe in investing
             in people — not just products.
           </p>
@@ -20,42 +20,56 @@ export default function CommunityMoments() {
 
           {/* Block 1 */}
           <div>
-            <h3 className="text-xl font-semibold text-[#0f172a] mb-4">
+            <h3 className="text-xl font-semibold text-[var(--color-charcoal)] mb-4">
               Supporting Local Schools
             </h3>
 
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-[var(--color-muted)] leading-relaxed">
               We regularly partner with schools to encourage healthy habits,
               reward students, and support educational programs.
             </p>
+
+            <a
+              href="mailto:hello@sunshinesmoothiesvallejo.com?subject=School%20Partnership"
+              className="inline-block mt-4 text-[var(--color-orange)] font-medium hover:text-[var(--color-orange-dark)] transition"
+            >
+              Contact us about your school →
+            </a>
           </div>
 
           {/* Block 2 */}
           <div>
-            <h3 className="text-xl font-semibold text-[#0f172a] mb-4">
+            <h3 className="text-xl font-semibold text-[var(--color-charcoal)] mb-4">
               Youth & Athletics
             </h3>
 
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-[var(--color-muted)] leading-relaxed">
               Proud sponsors of youth sports teams and athletic programs,
               helping fuel the next generation on and off the field.
             </p>
+
+            <a
+              href="mailto:hello@sunshinesmoothiesvallejo.com?subject=Sponsorship%20Inquiry"
+              className="inline-block mt-4 text-[var(--color-orange)] font-medium hover:text-[var(--color-orange-dark)] transition"
+            >
+              Inquire about sponsorship →
+            </a>
           </div>
 
           {/* Block 3 */}
           <div>
-            <h3 className="text-xl font-semibold text-[#0f172a] mb-4">
+            <h3 className="text-xl font-semibold text-[var(--color-charcoal)] mb-4">
               Community Events
             </h3>
 
-            <p className="text-gray-600 leading-relaxed">
+            <p className="text-[var(--color-muted)] leading-relaxed">
               From local fundraisers to neighborhood initiatives, we show up
               for the people who support us every day.
             </p>
 
             <Link
               href="/events"
-              className="inline-block mt-4 text-yellow-600 font-medium hover:text-yellow-500 transition"
+              className="inline-block mt-4 text-[var(--color-orange)] font-medium hover:text-[var(--color-orange-dark)] transition"
             >
               Learn about Free Smoothie Day →
             </Link>

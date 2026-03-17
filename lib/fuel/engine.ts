@@ -65,12 +65,6 @@ async function getCustomerPhone(customerId: string) {
     const rawPhone = response.customer?.phoneNumber ?? null;
     const normalizedPhone = normalizePhone(rawPhone);
 
-    console.log("Square customer fetched:", {
-      customerId,
-      rawPhone,
-      normalizedPhone,
-    });
-
     return normalizedPhone;
   } catch (error) {
     console.error("Failed to fetch Square customer phone:", error);
@@ -90,15 +84,6 @@ async function recordTransaction(
   size: string,
   quantity: number
 ) {
-  console.log("Recording transaction:", {
-    phone,
-    customerId,
-    orderId,
-    type,
-    size,
-    quantity,
-  });
-
   const { error } = await supabase
     .from("fuel_transactions")
     .insert({
@@ -121,13 +106,10 @@ async function recordTransaction(
 /* -------------------------------- */
 
 export async function handleFuelOrder(order: any) {
-  console.log("Fuel engine received order:", order);
-
   const orderId = order.id;
   const customerId = order.customerId;
 
   if (!orderId) {
-    console.log("Order has no id. Skipping.");
     return;
   }
 
@@ -147,24 +129,20 @@ export async function handleFuelOrder(order: any) {
   }
 
   if (existingTransactions && existingTransactions.length > 0) {
-    console.log("Order already processed. Skipping:", orderId);
     return;
   }
 
   if (!customerId) {
-    console.log("No customer attached to order. Skipping.");
     return;
   }
 
   if (!order.lineItems || order.lineItems.length === 0) {
-    console.log("Order has no line items.");
     return;
   }
 
   const phone = await getCustomerPhone(customerId);
 
   if (!phone) {
-    console.log("No phone found for customer. Skipping.");
     return;
   }
 
@@ -194,8 +172,6 @@ export async function handleFuelOrder(order: any) {
 
   balance.square_customer_id = customerId;
 
-  console.log("Starting balance:", balance);
-
   /* -------------------------------- */
   /* Process Order Line Items         */
   /* -------------------------------- */
@@ -203,8 +179,6 @@ export async function handleFuelOrder(order: any) {
   for (const item of order.lineItems) {
     const variationId = item.catalogObjectId;
     const quantity = Number(item.quantity || 1);
-
-    console.log("Processing item:", variationId, "qty:", quantity);
 
     /* ---------- PACK PURCHASES ---------- */
 
@@ -272,13 +246,6 @@ export async function handleFuelOrder(order: any) {
           "MEDIUM",
           quantity
         );
-      } else {
-        console.log("Redemption skipped (insufficient balance)", {
-          phone,
-          size: "MEDIUM",
-          balance: balance.fuel_medium,
-          attempted: quantity,
-        });
       }
     } else if (variationId === REDEEM_VARIATIONS.LARGE) {
       if (balance.fuel_large >= quantity) {
@@ -292,13 +259,6 @@ export async function handleFuelOrder(order: any) {
           "LARGE",
           quantity
         );
-      } else {
-        console.log("Redemption skipped (insufficient balance)", {
-          phone,
-          size: "LARGE",
-          balance: balance.fuel_large,
-          attempted: quantity,
-        });
       }
     } else if (variationId === REDEEM_VARIATIONS.XL) {
       if (balance.fuel_xl >= quantity) {
@@ -312,13 +272,6 @@ export async function handleFuelOrder(order: any) {
           "XL",
           quantity
         );
-      } else {
-        console.log("Redemption skipped (insufficient balance)", {
-          phone,
-          size: "XL",
-          balance: balance.fuel_xl,
-          attempted: quantity,
-        });
       }
     } else if (variationId === REDEEM_VARIATIONS.JUMBO) {
       if (balance.fuel_jumbo >= quantity) {
@@ -332,18 +285,9 @@ export async function handleFuelOrder(order: any) {
           "JUMBO",
           quantity
         );
-      } else {
-        console.log("Redemption skipped (insufficient balance)", {
-          phone,
-          size: "JUMBO",
-          balance: balance.fuel_jumbo,
-          attempted: quantity,
-        });
       }
     }
   }
-
-  console.log("Updated balance:", balance);
 
   /* -------------------------------- */
   /* Save Balance Snapshot            */
@@ -375,16 +319,12 @@ export async function handleFuelOrder(order: any) {
 
   const display = formatDisplay(balance);
 
-  console.log("Updating Square customer name:", display);
-
   try {
     await squareClient.customers.update({
       customerId,
       familyName: display,
     });
   } catch (error) {
-    console.error("Failed updating Square customer display:", error);
+    // Non-critical: customer display update failed
   }
-
-  console.log("Fuel engine finished successfully.");
 }

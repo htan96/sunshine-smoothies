@@ -1,9 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import { FaInstagram, FaTiktok, FaYelp } from "react-icons/fa";
-/* -------------------------------- */
-/* Social Links                     */
-/* -------------------------------- */
 
 const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/sunshinesmoothiesandcoffee/",
@@ -25,9 +23,33 @@ export default function SocialSection() {
         </h2>
 
         {/* Subtext */}
-        <p className="text-white/70 mb-16 text-lg">
+        <p className="text-white/70 mb-10 text-lg">
           Follow us for new flavors, community events, and special promotions.
         </p>
+
+        {/* Internal Links: About, Community, Events */}
+        <div className="flex justify-center gap-6 mb-14 flex-wrap">
+          <Link
+            href="/about"
+            className="text-white/70 hover:text-yellow-400 transition text-sm font-medium"
+          >
+            About
+          </Link>
+          <span className="text-white/30">•</span>
+          <Link
+            href="/community"
+            className="text-white/70 hover:text-yellow-400 transition text-sm font-medium"
+          >
+            Community
+          </Link>
+          <span className="text-white/30">•</span>
+          <Link
+            href="/events"
+            className="text-white/70 hover:text-yellow-400 transition text-sm font-medium"
+          >
+            Events
+          </Link>
+        </div>
 
         {/* Social Icons */}
         <div className="flex justify-center gap-16 flex-wrap">
@@ -78,6 +100,11 @@ export default function SocialSection() {
           </a>
 
         </div>
+
+        {/* Copyright */}
+        <p className="mt-16 text-sm text-white/50">
+          © {new Date().getFullYear()} Sunshine Smoothies & Coffee
+        </p>
       </div>
     </section>
   );

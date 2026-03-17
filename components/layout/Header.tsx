@@ -2,15 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useCartStore } from "@/features/cart/store";
 
-const ORANGE = "#FF7A00";
+const ORANGE = "#F4A024"; /* matches v3 design token */
 
 export default function Header() {
-  const pathname = usePathname();
-  const isHome = pathname === "/";
-
   const itemCount = useCartStore((state) =>
     state.getItemCount()
   );
@@ -19,13 +15,7 @@ export default function Header() {
   const hasItems = itemCount > 0;
 
   return (
-    <header
-      className={`w-full z-50 ${
-        isHome
-          ? "absolute top-0 left-0"
-          : "sticky top-0 bg-white shadow-sm"
-      }`}
-    >
+    <header className="sticky top-0 z-50 w-full bg-white shadow-sm">
       <div className="w-full px-6 md:px-10 py-4 md:py-6 flex items-center justify-center md:justify-between">
 
         {/* Logo */}
@@ -42,27 +32,25 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav
-          className={`hidden md:flex items-center gap-10 font-medium tracking-wide ${
-            isHome ? "text-white" : "text-gray-900"
-          }`}
+          className="hidden md:flex items-center gap-10 font-medium tracking-wide text-gray-900"
         >
-          <Link href="/menu" className="hover:text-orange-500 transition">
+          <Link href="/menu" className="hover:text-[var(--color-orange)] transition">
             Menu
           </Link>
 
-          <Link href="/about" className="hover:text-orange-500 transition">
+          <Link href="/about" className="hover:text-[var(--color-orange)] transition">
             About
           </Link>
 
-          <Link href="/community" className="hover:text-orange-500 transition">
+          <Link href="/community" className="hover:text-[var(--color-orange)] transition">
             Community
           </Link>
 
-          <Link href="/events" className="hover:text-orange-500 transition">
+          <Link href="/events" className="hover:text-[var(--color-orange)] transition">
             Events
           </Link>
 
-          <Link href="/location" className="hover:text-orange-500 transition">
+          <Link href="/location" className="hover:text-[var(--color-orange)] transition">
             Location
           </Link>
 

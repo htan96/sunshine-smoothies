@@ -4,12 +4,11 @@ import { useState } from "react";
 import { useCartStore } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
+import LocationGate from "@/components/location/LocationGate";
 
 /* -------------------------------- */
 /* ORDERING HOURS CONFIG            */
 /* -------------------------------- */
-
-const TEST_MODE = false;
 
 const ORDER_START_HOUR = 8;
 const ORDER_END_HOUR = 18;
@@ -18,8 +17,6 @@ const PREP_TIME_MINUTES = 20;
 const SLOT_INTERVAL = 15;
 
 function isWithinOrderingHours() {
-  if (TEST_MODE) return true;
-
   const now = new Date();
   const hour = now.getHours();
   return hour >= ORDER_START_HOUR && hour < ORDER_END_HOUR;
@@ -67,6 +64,11 @@ function generatePickupSlots() {
   return slots;
 }
 
+function isValidUSPhone(phone: string): boolean {
+  const digits = phone.replace(/\D/g, "");
+  return digits.length === 10 || (digits.length === 11 && digits.startsWith("1"));
+}
+
 /* -------------------------------- */
 /* TYPES                            */
 /* -------------------------------- */
@@ -100,6 +102,8 @@ export default function CartDrawer() {
 
   const [checkingFuel, setCheckingFuel] = useState(false);
   const [squareCustomerId, setSquareCustomerId] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [showLocationGate, setShowLocationGate] = useState(false);
 
   const [fuelBalances, setFuelBalances] = useState<FuelBalances>({
     medium: 0,
@@ -198,20 +202,32 @@ export default function CartDrawer() {
   /* -------------------------------- */
 
   async function handleCheckout() {
-    if (!selectedLocation) return;
+    setCheckoutError(null);
 
-    if (!orderingOpen) {
-      alert("Online ordering is available between 8AM and 6PM.");
+    if (!selectedLocation) {
+      setCheckoutError("Please select a pickup location.");
+      setShowLocationGate(true);
       return;
     }
 
-    if (phoneRequired && !phone.trim()) {
-      alert("Phone number required.");
+    if (!orderingOpen) {
+      setCheckoutError("Online ordering is available between 8AM and 6PM.");
       return;
+    }
+
+    if (phoneRequired) {
+      if (!phone.trim()) {
+        setCheckoutError("Phone number is required for this order.");
+        return;
+      }
+      if (!isValidUSPhone(phone)) {
+        setCheckoutError("Please enter a valid 10-digit phone number.");
+        return;
+      }
     }
 
     if (fuelPackInCart && redemptionInCart && packSize !== redemptionSize) {
-      alert("Fuel Pack redemption must match the pack size.");
+      setCheckoutError("Fuel Pack redemption must match the pack size.");
       return;
     }
 
@@ -219,7 +235,7 @@ export default function CartDrawer() {
       const data = await checkFuelBalance();
 
       if (!data?.allowed) {
-        alert(data?.message || "No drinks remaining.");
+        setCheckoutError(data?.message || "No drinks remaining.");
         return;
       }
 
@@ -235,7 +251,7 @@ export default function CartDrawer() {
           : 0;
 
       if (redemptionQuantity > remaining) {
-        alert(`You only have ${remaining} drinks remaining.`);
+        setCheckoutError(`You only have ${remaining} drink${remaining === 1 ? "" : "s"} remaining.`);
         return;
       }
     }
@@ -259,6 +275,8 @@ export default function CartDrawer() {
 
     if (data.url) {
       window.location.href = data.url;
+    } else {
+      setCheckoutError(data?.error || "Checkout failed. Please try again.");
     }
   }
 
@@ -284,10 +302,35 @@ export default function CartDrawer() {
           {/* LOCATION */}
 
           <div className="bg-neutral-100 p-4 rounded-xl">
-            <p className="font-medium">{selectedLocation?.name}</p>
-            <p className="text-sm text-neutral-500">
-              {selectedLocation?.address}
-            </p>
+            {selectedLocation ? (
+              <>
+                <p className="font-medium">{selectedLocation.name}</p>
+                <p className="text-sm text-neutral-500">
+                  {selectedLocation.address}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationGate(true)}
+                  className="mt-2 text-sm text-[var(--color-orange)] hover:text-[var(--color-orange-dark)] font-medium"
+                >
+                  Change location
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-neutral-600">Pickup location</p>
+                <p className="text-sm text-neutral-500 mb-2">
+                  Select where you&apos;d like to pick up your order.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationGate(true)}
+                  className="text-sm text-[var(--color-orange)] hover:text-[var(--color-orange-dark)] font-medium"
+                >
+                  Select location →
+                </button>
+              </>
+            )}
           </div>
 
          {/* PICKUP TIME */}
@@ -357,8 +400,9 @@ export default function CartDrawer() {
                 onChange={(e) => {
                   const value = e.target.value;
                   setPhone(value);
+                  setCheckoutError(null);
 
-                  if (redemptionInCart && value.length === 10) {
+                  if (redemptionInCart && isValidUSPhone(value)) {
                     checkFuelBalance();
                   }
                 }}
@@ -409,6 +453,12 @@ export default function CartDrawer() {
                 {item.variationName}
               </p>
 
+              {item.modifiers && item.modifiers.length > 0 && (
+                <p className="text-xs text-neutral-600 mt-1">
+                  + {item.modifiers.map((m) => `${m.name}${(m.quantity ?? 1) > 1 ? ` (×${m.quantity})` : ""}`).join(", ")}
+                </p>
+              )}
+
               <div className="flex justify-between mt-3">
 
                 <div className="flex gap-3">
@@ -451,6 +501,12 @@ export default function CartDrawer() {
 
         <div className="border-t p-6">
 
+          {checkoutError && (
+            <p className="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+              {checkoutError}
+            </p>
+          )}
+
           <div className="flex justify-between text-lg font-semibold mb-4">
             <span>Total</span>
             <span>${(getCartTotal() / 100).toFixed(2)}</span>
@@ -460,19 +516,23 @@ export default function CartDrawer() {
             onClick={handleCheckout}
             disabled={
               !orderingOpen ||
-              (phoneRequired && !phone.trim()) ||
+              (phoneRequired && (!phone.trim() || !isValidUSPhone(phone))) ||
               checkingFuel
             }
-            className={`w-full py-4 rounded-full font-semibold ${
-              orderingOpen && (!phoneRequired || phone.trim())
-                ? "bg-black text-white"
-                : "bg-neutral-300"
+            className={`w-full py-4 rounded-full font-semibold transition ${
+              orderingOpen && (!phoneRequired || phone.trim()) && selectedLocation
+                ? "bg-black text-white hover:bg-neutral-800"
+                : "bg-neutral-300 cursor-not-allowed"
             }`}
           >
-            {!orderingOpen
+            {!selectedLocation
+              ? "Select Location"
+              : !orderingOpen
               ? "Ordering Closed"
               : phoneRequired && !phone.trim()
               ? "Enter Phone Number"
+              : phoneRequired && !isValidUSPhone(phone)
+              ? "Enter Valid Phone"
               : checkingFuel
               ? "Checking Balance..."
               : "Checkout"}
@@ -481,6 +541,10 @@ export default function CartDrawer() {
         </div>
 
       </div>
+
+      {showLocationGate && (
+        <LocationGate onClose={() => setShowLocationGate(false)} />
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ const images = [
 
 export default function CommunitySlider() {
   return (
-    <section className="py-16 bg-white">
+    <section className="py-16 bg-neutral-50">
       <div className="max-w-6xl mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {images.map((img) => (
