@@ -1,0 +1,27 @@
+---
+description: Never delete or overwrite .env files
+alwaysApply: true
+---
+
+# Environment Files — Do Not Modify
+
+**Never delete, overwrite, or replace `.env.local`, `.env`, or any `.env*` file.**
+
+These files contain secrets (API keys, tokens, passwords) that are:
+- Not in version control (gitignored)
+- Unique to each developer or deployment
+- Irrecoverable if lost
+
+## What NOT to do
+
+- ❌ Delete `.env.local` or other env files
+- ❌ Overwrite env files with new content (Write tool)
+- ❌ Create env files that replace existing ones without explicit user confirmation
+- ❌ Assume env files are empty or disposable
+
+## What TO do
+
+- ✅ Only add or update env files if the user explicitly pastes or provides the exact content
+- ✅ Use `.env.example` for documentation (placeholder values only, no secrets)
+- ✅ If suggesting env vars, tell the user to add them manually to their `.env.local`
+- ✅ When in doubt, ask the user to make env changes themselves

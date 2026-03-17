@@ -1,0 +1,38 @@
+---
+description: Create backup before any code changes
+alwaysApply: true
+---
+
+# Backups — Required Before Code Changes
+
+**Before editing, replacing, or overwriting any file, create a backup first.**
+
+## Workflow
+
+1. **Before** using `StrReplace`, `Write`, or any tool that modifies a file:
+   - Copy the file to `.backups/` preserving path structure
+   - Format: `.backups/<original-path>/<filename>.<timestamp>.bak`
+   - Example: Editing `components/cart/CartDrawer.tsx` → backup to `.backups/components/cart/CartDrawer.tsx.1739566822.bak`
+
+2. **Then** make the intended edit.
+
+3. Skip backup only for **new files** (files that don't exist yet).
+
+## Backup Location
+
+```
+.backups/
+  components/
+    cart/
+      CartDrawer.tsx.1739566822.bak
+  app/
+    page.tsx.1739566901.bak
+```
+
+Use Unix timestamp (seconds since epoch) for uniqueness: `Math.floor(Date.now()/1000)` or similar.
+
+## Files to Always Backup
+
+- Source code (`.ts`, `.tsx`, `.js`, `.jsx`)
+- Config (`.json`, `.ts`, `.css`)
+- Any existing file being modified

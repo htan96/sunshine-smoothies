@@ -6,6 +6,7 @@ import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
 import LocationGate from "@/components/location/LocationGate";
 import MenuItemModal from "@/components/menu/MenuItemModal";
+import EmbeddedCheckout from "@/components/checkout/EmbeddedCheckout";
 import type { MenuItem } from "@/features/menu/types";
 
 /* -------------------------------- */
@@ -94,6 +95,7 @@ export default function CartDrawer() {
     removeItem,
     updateQuantity,
     getCartTotal,
+    clearCart,
   } = useCartStore();
 
   const selectedLocation = useLocationStore((state) => state.selectedLocation);
@@ -101,6 +103,7 @@ export default function CartDrawer() {
   const [pickupDate, setPickupDate] = useState<Date>(getReadyTime());
   const [notes, setNotes] = useState("");
   const [phone, setPhone] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
   const [checkingFuel, setCheckingFuel] = useState(false);
   const [squareCustomerId, setSquareCustomerId] = useState<string | null>(null);
@@ -118,9 +121,28 @@ export default function CartDrawer() {
   const [menuItemForEdit, setMenuItemForEdit] = useState<MenuItem | null>(null);
   const [menuItemsForEdit, setMenuItemsForEdit] = useState<MenuItem[]>([]);
 
+  const [showEmbeddedCheckout, setShowEmbeddedCheckout] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [orderTotal, setOrderTotal] = useState<number>(0);
+  const [orderSubtotal, setOrderSubtotal] = useState<number>(0);
+  const [orderTax, setOrderTax] = useState<number>(0);
+
   const orderingOpen = isWithinOrderingHours();
+  const testingMode = process.env.NEXT_PUBLIC_CHECKOUT_TESTING_MODE === "true";
+  const canOrder = orderingOpen || testingMode;
   const timeSlots = generatePickupSlots();
   const readyTime = getReadyTime();
+
+  useEffect(() => {
+    if (!isOpen) {
+      setShowEmbeddedCheckout(false);
+      setOrderId(null);
+      setOrderTotal(0);
+      setOrderSubtotal(0);
+      setOrderTax(0);
+      setCheckoutError(null);
+    }
+  }, [isOpen]);
 
   /* -------------------------------- */
   /* Detect Redemption Items          */
@@ -260,7 +282,7 @@ export default function CartDrawer() {
       return;
     }
 
-    if (!orderingOpen) {
+    if (!canOrder) {
       setCheckoutError("Online ordering is available between 8AM and 6PM.");
       return;
     }
@@ -306,7 +328,7 @@ export default function CartDrawer() {
       }
     }
 
-    const res = await fetch("/api/checkout", {
+    const res = await fetch("/api/checkout/create-order", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -318,16 +340,37 @@ export default function CartDrawer() {
         locationId: selectedLocation.id,
         phone,
         squareCustomerId,
+        displayName: displayName.trim() || undefined,
       }),
     });
 
     const data = await res.json();
 
-    if (data.url) {
-      window.location.href = data.url;
+    if (data.orderId && typeof data.total === "number") {
+      setOrderId(data.orderId);
+      setOrderTotal(data.total);
+      setOrderSubtotal(data.subtotal ?? data.total);
+      setOrderTax(data.tax ?? 0);
+      setShowEmbeddedCheckout(true);
     } else {
       setCheckoutError(data?.error || "Checkout failed. Please try again.");
     }
+  }
+
+  function handlePaymentSuccess() {
+    clearCart();
+    closeCart();
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    window.location.href = `${baseUrl}/ordersuccess`;
+  }
+
+  function handleEmbeddedCheckoutBack() {
+    setShowEmbeddedCheckout(false);
+    setOrderId(null);
+    setOrderTotal(0);
+    setOrderSubtotal(0);
+    setOrderTax(0);
+    setCheckoutError(null);
   }
 
   if (!isOpen) return null;
@@ -342,7 +385,7 @@ export default function CartDrawer() {
 
         <div className="px-6 py-5 border-b border-neutral-100 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-[var(--color-charcoal)]">
-            Your Order
+            {showEmbeddedCheckout ? "Payment" : "Your Order"}
           </h2>
           <button
             onClick={closeCart}
@@ -353,8 +396,24 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* BODY */}
+        {/* BODY - Cart or Embedded Checkout */}
 
+        {showEmbeddedCheckout && orderId && selectedLocation ? (
+          <EmbeddedCheckout
+            items={items}
+            total={orderTotal}
+            subtotal={orderSubtotal}
+            tax={orderTax}
+            orderId={orderId}
+            locationId={selectedLocation.id}
+            allowQuickCheckout={true}
+            onSuccess={handlePaymentSuccess}
+            onBack={handleEmbeddedCheckoutBack}
+            onError={setCheckoutError}
+            error={checkoutError}
+          />
+        ) : (
+        <>
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
           {/* LOCATION - v3 */}
@@ -443,6 +502,21 @@ export default function CartDrawer() {
   </div>
 
 </div>
+
+          {/* DISPLAY NAME (optional) */}
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
+              Name for order <span className="normal-case font-normal">(optional)</span>
+            </p>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="e.g. Alex"
+              className="w-full bg-neutral-100 rounded-xl px-4 py-3 text-[var(--color-charcoal)] placeholder:text-[var(--color-muted)] focus:ring-2 focus:ring-[var(--color-orange)] focus:border-transparent focus:outline-none"
+            />
+          </div>
 
           {/* PHONE INPUT */}
 
@@ -588,19 +662,19 @@ export default function CartDrawer() {
             type="button"
             onClick={handleCheckout}
             disabled={
-              !orderingOpen ||
+              !canOrder ||
               (phoneRequired && (!phone.trim() || !isValidUSPhone(phone))) ||
               checkingFuel
             }
             className={`w-full py-4 rounded-full font-semibold transition ${
-              orderingOpen && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
+              canOrder && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
                 ? "bg-[var(--color-orange)] text-black hover:opacity-90"
                 : "bg-neutral-200 text-[var(--color-muted)] cursor-not-allowed"
             }`}
           >
             {!selectedLocation
               ? "Select Location"
-              : !orderingOpen
+              : !canOrder
               ? "Ordering Closed"
               : phoneRequired && !phone.trim()
               ? "Enter Phone Number"
@@ -612,6 +686,8 @@ export default function CartDrawer() {
           </button>
 
         </div>
+        </>
+        )}
 
       </div>
 

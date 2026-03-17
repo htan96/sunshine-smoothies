@@ -1,16 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/features/cart/store";
 
 export default function Header() {
+  const [mounted, setMounted] = useState(false);
   const itemCount = useCartStore((state) =>
     state.getItemCount()
   );
   const toggleCart = useCartStore((state) => state.toggleCart);
 
-  const hasItems = itemCount > 0;
+  useEffect(() => setMounted(true), []);
+  const hasItems = mounted && itemCount > 0;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white shadow-sm">

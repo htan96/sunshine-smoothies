@@ -65,7 +65,7 @@ export default function CheckoutModal({
   const content = (
     <div className="flex flex-col max-h-[85vh] md:max-h-[90vh] w-full max-w-md">
       {/* Header - v3 style */}
-      <div className="p-6 border-b shrink-0">
+      <div className="p-6 border-b border-neutral-100 shrink-0">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-[var(--color-charcoal)]">
             Checkout
@@ -209,7 +209,7 @@ export default function CheckoutModal({
         </div>
 
         {/* Total */}
-        <div className="flex justify-between items-center py-4 border-t border-neutral-200">
+        <div className="flex justify-between items-center py-4 border-t border-neutral-100">
           <span className="text-lg font-semibold text-[var(--color-charcoal)]">Total</span>
           <span className="text-xl font-bold text-[var(--color-charcoal)]">
             ${(getCartTotal() / 100).toFixed(2)}
@@ -220,7 +220,7 @@ export default function CheckoutModal({
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t bg-white shrink-0 space-y-3">
+      <div className="p-6 border-t border-neutral-100 bg-white shrink-0 space-y-3">
         <button
           type="button"
           onClick={() => {

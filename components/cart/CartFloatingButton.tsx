@@ -1,15 +1,19 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { clsx } from "clsx";
 import { useCartStore } from "@/features/cart/store";
 
 /* v3 design token */
 
 export default function CartFloatingButton() {
+  const [mounted, setMounted] = useState(false);
   const itemCount = useCartStore((state) => state.getItemCount());
   const openCart = useCartStore((state) => state.openCart);
 
-  const hasItems = itemCount > 0;
+  useEffect(() => setMounted(true), []);
+
+  const hasItems = mounted && itemCount > 0;
 
   return (
     <button
