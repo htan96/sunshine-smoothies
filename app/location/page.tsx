@@ -47,7 +47,7 @@ export default function LocationPage() {
       {/* ===== SOLANO STOREFRONT ===== */}
       <section className="relative w-full h-[550px]">
         <Image
-          src="/solano.png"
+          src="/locations/solano.png"
           alt="Solano Avenue Storefront"
           fill
           className="object-cover"
@@ -99,7 +99,7 @@ export default function LocationPage() {
       {/* ===== WATERFRONT DRIVE-THRU ===== */}
       <section className="relative w-full h-[550px]">
         <Image
-          src="/waterfront.png"
+          src="/locations/waterfront.png"
           alt="Waterfront Drive-Thru"
           fill
           className="object-cover"

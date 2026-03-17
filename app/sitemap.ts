@@ -23,6 +23,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: "https://sunshinesmoothiesvallejo.com/events",
+      lastModified: new Date(),
+      priority: 0.7,
+    },
+    {
       url: "https://sunshinesmoothiesvallejo.com/about",
       lastModified: new Date(),
       priority: 0.7,

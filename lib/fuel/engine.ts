@@ -209,7 +209,7 @@ export async function handleFuelOrder(order: any) {
     /* ---------- PACK PURCHASES ---------- */
 
     if (variationId === PACK_VARIATIONS.MEDIUM) {
-      const credits = 8 * quantity;
+      const credits = 10 * quantity;
       balance.fuel_medium += credits;
 
       await recordTransaction(
@@ -221,7 +221,7 @@ export async function handleFuelOrder(order: any) {
         credits
       );
     } else if (variationId === PACK_VARIATIONS.LARGE) {
-      const credits = 8 * quantity;
+      const credits = 10 * quantity;
       balance.fuel_large += credits;
 
       await recordTransaction(
@@ -233,7 +233,7 @@ export async function handleFuelOrder(order: any) {
         credits
       );
     } else if (variationId === PACK_VARIATIONS.XL) {
-      const credits = 8 * quantity;
+      const credits = 10 * quantity;
       balance.fuel_xl += credits;
 
       await recordTransaction(
@@ -245,7 +245,7 @@ export async function handleFuelOrder(order: any) {
         credits
       );
     } else if (variationId === PACK_VARIATIONS.JUMBO) {
-      const credits = 8 * quantity;
+      const credits = 10 * quantity;
       balance.fuel_jumbo += credits;
 
       await recordTransaction(

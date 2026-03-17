@@ -58,6 +58,10 @@ export default function Header() {
             Community
           </Link>
 
+          <Link href="/events" className="hover:text-orange-500 transition">
+            Events
+          </Link>
+
           <Link href="/location" className="hover:text-orange-500 transition">
             Location
           </Link>

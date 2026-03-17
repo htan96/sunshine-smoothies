@@ -8,7 +8,7 @@ export default function AboutOwner() {
         {/* Image */}
         <div className="relative w-full h-[420px] md:h-[500px] shadow-xl">
           <Image
-            src="/owner.jpeg"
+            src="/owners/carlos.jpeg"
             alt="Carlos - Owner of Sunshine Smoothies"
             fill
             className="object-cover"

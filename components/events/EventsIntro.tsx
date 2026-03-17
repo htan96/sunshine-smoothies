@@ -1,0 +1,18 @@
+export default function EventsIntro() {
+  return (
+    <section className="pt-28 pb-16 text-center bg-white">
+      <div className="max-w-4xl mx-auto px-6">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900">
+          Free Smoothie Day
+        </h1>
+
+        <div className="h-[3px] w-16 bg-yellow-400 mx-auto mt-5 rounded-full" />
+
+        <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+          One day each year, we give away free smoothies to our community —
+          no strings attached. Here&apos;s the story behind it.
+        </p>
+      </div>
+    </section>
+  );
+}

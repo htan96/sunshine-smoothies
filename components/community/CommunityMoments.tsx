@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CommunityMoments() {
   return (
     <section className="py-24 bg-white">
@@ -50,6 +52,13 @@ export default function CommunityMoments() {
               From local fundraisers to neighborhood initiatives, we show up
               for the people who support us every day.
             </p>
+
+            <Link
+              href="/events"
+              className="inline-block mt-4 text-yellow-600 font-medium hover:text-yellow-500 transition"
+            >
+              Learn about Free Smoothie Day →
+            </Link>
           </div>
 
         </div>

@@ -5,7 +5,7 @@ export default function Hero() {
     <section className="relative h-screen w-full">
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: "url('/hero.png')" }}
+        style={{ backgroundImage: "url('/hero/hero.png')" }}
       />
 
       <div className="absolute inset-0 bg-black/50" />

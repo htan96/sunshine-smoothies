@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 const slides = [
   {
     badge: "Fuel Packs",
-    headline: "Buy 5 Smoothies",
-    highlight: "Get 8 Total",
+    headline: "Buy 7 Smoothies",
+    highlight: "Get 10 Total",
     description:
       "Prepaid fuel packs save you money on your favorite smoothies.",
     primary: {

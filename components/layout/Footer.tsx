@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Utensils, MapPin, ShoppingBag, Users, Info } from "lucide-react"
+import { Utensils, MapPin, ShoppingBag, Users, Info, Calendar } from "lucide-react"
 import { useCartStore } from "@/features/cart/store"
 
 export default function Footer() {
@@ -63,6 +63,14 @@ export default function Footer() {
         >
           <Users size={22} />
           <span className="text-xs mt-1">Community</span>
+        </Link>
+
+        <Link
+          href="/events"
+          className="flex flex-col items-center text-gray-700 hover:text-yellow-500 transition"
+        >
+          <Calendar size={22} />
+          <span className="text-xs mt-1">Events</span>
         </Link>
 
       </div>
