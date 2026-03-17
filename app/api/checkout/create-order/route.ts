@@ -61,11 +61,28 @@ export async function POST(req: Request) {
       phone,
       squareCustomerId,
       displayName,
+      email,
     } = body;
 
     /* -------------------------------- */
     /* Basic Validation                 */
     /* -------------------------------- */
+
+    const emailTrimmed =
+      typeof email === "string" ? email.trim() : "";
+    if (!emailTrimmed) {
+      return NextResponse.json(
+        { error: "Email is required for your receipt" },
+        { status: 400 }
+      );
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      return NextResponse.json(
+        { error: "Please enter a valid email address" },
+        { status: 400 }
+      );
+    }
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -218,7 +235,7 @@ export async function POST(req: Request) {
     const displayNameTrimmed =
       typeof displayName === "string" ? displayName.trim() : "";
 
-    if (!customerId && (phone || displayNameTrimmed)) {
+    if (!customerId && (phone || displayNameTrimmed || emailTrimmed)) {
       try {
         if (phone) {
           const normalizedPhone = normalizePhone(phone);
@@ -237,16 +254,28 @@ export async function POST(req: Request) {
 
           if (existing) {
             customerId = existing.id;
+            if (emailTrimmed && !existing.emailAddress) {
+              try {
+                await squareClient.customers.update({
+                  customerId: existing.id,
+                  customer: { emailAddress: emailTrimmed },
+                });
+              } catch {
+                // Update failed - continue with existing customer
+              }
+            }
           } else {
             const created = await squareClient.customers.create({
               phoneNumber: normalizedPhone,
+              emailAddress: emailTrimmed,
               ...(displayNameTrimmed && { givenName: displayNameTrimmed }),
             });
             customerId = created.customer?.id ?? null;
           }
-        } else if (displayNameTrimmed) {
+        } else if (displayNameTrimmed || emailTrimmed) {
           const created = await squareClient.customers.create({
-            givenName: displayNameTrimmed,
+            ...(displayNameTrimmed && { givenName: displayNameTrimmed }),
+            emailAddress: emailTrimmed,
           });
           customerId = created.customer?.id ?? null;
         }
@@ -263,6 +292,7 @@ export async function POST(req: Request) {
       fuel_phone: (phone && phone.trim()) ? phone.trim() : "-",
       fuel_pack: fuelPackInCart ? "true" : "false",
       fuel_redeem: redemptionInCart ? "true" : "false",
+      receipt_email: emailTrimmed,
     };
     if (packSize) metadata.pack_size = packSize;
     if (redemptionSize) metadata.redemption_size = redemptionSize;

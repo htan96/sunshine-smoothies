@@ -63,6 +63,8 @@ export async function POST(req: Request) {
         ? BigInt(Math.round(tipCents))
         : undefined;
 
+    const receiptEmail = order.metadata?.receipt_email;
+
     const paymentResponse = await squareClient.payments.create({
       idempotencyKey: randomUUID(),
       sourceId,
@@ -79,6 +81,7 @@ export async function POST(req: Request) {
       orderId,
       locationId,
       autocomplete: true,
+      ...(receiptEmail && { buyerEmailAddress: receiptEmail }),
     });
 
     const payment = paymentResponse.payment;

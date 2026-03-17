@@ -323,21 +323,33 @@ export default function EmbeddedCheckout({
             )}
             <CreditCard
               render={(PayButton) => (
-                <div className="flex gap-3 mt-4">
-                  <button
-                    type="button"
-                    onClick={onBack}
-                    disabled={submitting}
-                    className="flex-1 py-3 rounded-full font-medium border border-neutral-200 text-[var(--color-charcoal)] hover:bg-neutral-50 disabled:opacity-50 transition"
-                  >
-                    Back
-                  </button>
-                  <PayButton
-                    className="flex-1 py-3 rounded-full font-semibold bg-[var(--color-orange)] text-black hover:opacity-90 disabled:opacity-50 transition"
-                    isLoading={submitting}
-                  >
-                    {submitting ? "Processing…" : "Pay $" + (totalWithTip / 100).toFixed(2)}
-                  </PayButton>
+                <div className="space-y-3 mt-4">
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      disabled={submitting}
+                      className="flex-1 py-3 rounded-full font-medium border border-neutral-200 text-[var(--color-charcoal)] hover:bg-neutral-50 disabled:opacity-50 transition"
+                    >
+                      Back
+                    </button>
+                    <PayButton
+                      className="flex-1 py-3 rounded-full font-semibold bg-[var(--color-orange)] text-black hover:opacity-90 disabled:opacity-50 transition"
+                      isLoading={submitting}
+                    >
+                      {submitting ? "Processing…" : "Pay $" + (totalWithTip / 100).toFixed(2)}
+                    </PayButton>
+                  </div>
+                  <p className="text-center text-xs text-[var(--color-muted)]">
+                    <a
+                      href="https://squareup.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-[var(--color-charcoal)] transition"
+                    >
+                      Powered by Square
+                    </a>
+                  </p>
                 </div>
               )}
             />

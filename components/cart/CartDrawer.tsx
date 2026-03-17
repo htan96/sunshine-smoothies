@@ -72,6 +72,10 @@ function isValidUSPhone(phone: string): boolean {
   return digits.length === 10 || (digits.length === 11 && digits.startsWith("1"));
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 /* -------------------------------- */
 /* TYPES                            */
 /* -------------------------------- */
@@ -104,6 +108,7 @@ export default function CartDrawer() {
   const [notes, setNotes] = useState("");
   const [phone, setPhone] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
 
   const [checkingFuel, setCheckingFuel] = useState(false);
   const [squareCustomerId, setSquareCustomerId] = useState<string | null>(null);
@@ -287,6 +292,15 @@ export default function CartDrawer() {
       return;
     }
 
+    if (!email.trim()) {
+      setCheckoutError("Email is required for your receipt.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setCheckoutError("Please enter a valid email address.");
+      return;
+    }
+
     if (phoneRequired) {
       if (!phone.trim()) {
         setCheckoutError("Phone number is required for this order.");
@@ -341,6 +355,7 @@ export default function CartDrawer() {
         phone,
         squareCustomerId,
         displayName: displayName.trim() || undefined,
+        email: email.trim() || undefined,
       }),
     });
 
@@ -361,7 +376,8 @@ export default function CartDrawer() {
     clearCart();
     closeCart();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-    window.location.href = `${baseUrl}/ordersuccess`;
+    const params = orderId ? `?orderId=${encodeURIComponent(orderId)}` : "";
+    window.location.href = `${baseUrl}/ordersuccess${params}`;
   }
 
   function handleEmbeddedCheckoutBack() {
@@ -502,6 +518,24 @@ export default function CartDrawer() {
   </div>
 
 </div>
+
+          {/* EMAIL (for receipt) */}
+
+          <div>
+            <p className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
+              Email for receipt <span className="normal-case font-normal">(required)</span>
+            </p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setCheckoutError(null);
+              }}
+              placeholder="you@example.com"
+              className="w-full bg-neutral-100 rounded-xl px-4 py-3 text-[var(--color-charcoal)] placeholder:text-[var(--color-muted)] focus:ring-2 focus:ring-[var(--color-orange)] focus:border-transparent focus:outline-none"
+            />
+          </div>
 
           {/* DISPLAY NAME (optional) */}
 
@@ -663,11 +697,13 @@ export default function CartDrawer() {
             onClick={handleCheckout}
             disabled={
               !canOrder ||
+              !email.trim() ||
+              !isValidEmail(email) ||
               (phoneRequired && (!phone.trim() || !isValidUSPhone(phone))) ||
               checkingFuel
             }
             className={`w-full py-4 rounded-full font-semibold transition ${
-              canOrder && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
+              canOrder && email.trim() && isValidEmail(email) && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
                 ? "bg-[var(--color-orange)] text-black hover:opacity-90"
                 : "bg-neutral-200 text-[var(--color-muted)] cursor-not-allowed"
             }`}
@@ -676,6 +712,10 @@ export default function CartDrawer() {
               ? "Select Location"
               : !canOrder
               ? "Ordering Closed"
+              : !email.trim()
+              ? "Enter Email for Receipt"
+              : !isValidEmail(email)
+              ? "Enter Valid Email"
               : phoneRequired && !phone.trim()
               ? "Enter Phone Number"
               : phoneRequired && !isValidUSPhone(phone)
