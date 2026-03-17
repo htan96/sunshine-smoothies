@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
 import EventsIntro from "@/components/events/EventsIntro";
 import EventsHero from "@/components/events/EventsHero";
 import EventsStory from "@/components/events/EventsStory";
@@ -9,6 +10,7 @@ import SocialSection from "@/components/home/SocialSection";
 
 export const metadata: Metadata = {
   title: "Free Smoothie Day | Sunshine Smoothies Events",
+  alternates: { canonical: `${SITE_URL}/events` },
   description:
     "Learn about Free Smoothie Day at Sunshine Smoothies in Vallejo — we give away free smoothies to our community several times a year. The story behind this recurring celebration.",
 };

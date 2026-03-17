@@ -1,39 +1,40 @@
 import { MetadataRoute } from "next";
+import { SITE_URL } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: "https://sunshinesmoothiesvallejo.com/",
+      url: `${SITE_URL}/`,
       lastModified: new Date(),
       priority: 1,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/menu",
+      url: `${SITE_URL}/menu`,
       lastModified: new Date(),
       priority: 0.9,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/fuel",
+      url: `${SITE_URL}/fuel`,
       lastModified: new Date(),
       priority: 0.85,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/location",
+      url: `${SITE_URL}/location`,
       lastModified: new Date(),
       priority: 0.8,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/community",
+      url: `${SITE_URL}/community`,
       lastModified: new Date(),
       priority: 0.7,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/events",
+      url: `${SITE_URL}/events`,
       lastModified: new Date(),
       priority: 0.7,
     },
     {
-      url: "https://sunshinesmoothiesvallejo.com/about",
+      url: `${SITE_URL}/about`,
       lastModified: new Date(),
       priority: 0.7,
     },

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { SITE_URL } from "@/lib/site";
 import { HeroSection } from "@/components/home/HeroSection";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { BestSellers } from "@/components/home/BestSellers";
@@ -15,12 +16,13 @@ export const metadata: Metadata = {
   title: "Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo",
   description:
     "Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru.",
+  alternates: { canonical: SITE_URL },
   openGraph: {
-    url: "https://sunshinesmoothiesvallejo.com",
+    url: SITE_URL,
     title: "Sunshine Smoothies | Fresh Smoothies & Juice Bar in Vallejo",
     description:
       "Order fresh smoothies, juices, and fuel packs online from Sunshine Smoothies in Vallejo. Visit our Solano Avenue storefront or Waterfront drive-thru.",
-    images: [{ url: "https://sunshinesmoothiesvallejo.com/logo.png" }],
+    images: [{ url: `${SITE_URL}/logo.png` }],
     type: "website",
   },
 };
