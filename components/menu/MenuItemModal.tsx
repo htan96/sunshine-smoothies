@@ -99,6 +99,9 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
   if (!item) return null;
 
   function toggleModifier(list: MenuModifierList, modifierId: string) {
+    const isComboList = list.name.toLowerCase().includes("combo");
+    const isSelecting = !selectedModifiers[list.id]?.includes(modifierId);
+
     setSelectedModifiers((prev) => {
       const current = prev[list.id] || [];
       const exists = current.includes(modifierId);
@@ -112,6 +115,32 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
       if (list.max > 0 && current.length >= list.max) return prev;
       return { ...prev, [list.id]: [...current, modifierId] };
     });
+
+    // When selecting a combo, auto-switch to Large
+    if (isComboList && isSelecting && item) {
+      const largeVariation = item.variations.find((v) =>
+        v.name.toLowerCase().includes("large")
+      );
+      if (largeVariation) {
+        setSelectedVariation(largeVariation);
+      }
+    }
+  }
+
+  function handleSizeSelect(variation: MenuVariation) {
+    const isLarge = variation.name.toLowerCase().includes("large");
+    if (!isLarge) {
+      // Switching away from Large → clear combo selection
+      const comboListIds = comboLists.map((l) => l.id);
+      setSelectedModifiers((prev) => {
+        const next = { ...prev };
+        for (const id of comboListIds) {
+          delete next[id];
+        }
+        return next;
+      });
+    }
+    setSelectedVariation(variation);
   }
 
   const basePrice = selectedVariation.price;
@@ -190,6 +219,14 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
   const fruitVegLists = item.modifiers.filter((l) => isFruitVeg(l.name));
   const otherLists = item.modifiers.filter((l) => !isFruitVeg(l.name) && !isFuelPackDrinksList(l.name));
 
+  // Order: Combo (top) → Boosters → Customize (fruit/veg). "Other" goes after boosters.
+  const isComboList = (l: MenuModifierList) => l.name.toLowerCase().includes("combo");
+  const isBoosterList = (l: MenuModifierList) => l.name.toLowerCase().includes("booster");
+  const comboLists = otherLists.filter(isComboList);
+  const boosterLists = otherLists.filter(isBoosterList);
+  const restLists = otherLists.filter((l) => !isComboList(l) && !isBoosterList(l));
+  const orderedOtherLists = [...comboLists, ...boosterLists, ...restLists];
+
   const content = (
     <div className="flex flex-col max-h-[85vh] md:max-h-[90vh]">
       {/* Header */}
@@ -232,7 +269,7 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
                 <button
                   key={v.id}
                   type="button"
-                  onClick={() => setSelectedVariation(v)}
+                  onClick={() => handleSizeSelect(v)}
                   className={`w-full px-4 py-3 rounded-xl flex justify-between items-center text-left transition ${
                     selectedVariation.id === v.id
                       ? "bg-[var(--color-orange)] text-black"
@@ -262,10 +299,18 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
             list={fuelPackDrinksList}
             selectedModifiers={selectedModifiers}
             toggleModifier={toggleModifier}
-            selectedVariationName={selectedVariation.name}
             itemDescription={item.description}
           />
         )}
+        {orderedOtherLists.map((list) => (
+          <ModifierSection
+            key={`${list.id}-${selectedVariation.name}`}
+            list={list}
+            selectedModifiers={selectedModifiers}
+            toggleModifier={toggleModifier}
+            itemDescription={item.description}
+          />
+        ))}
         {fruitVegLists.length > 0 && (
           <ConsolidatedFruitVegSection
             itemModifiers={fruitVegLists}
@@ -274,16 +319,6 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
             toggleModifier={toggleModifier}
           />
         )}
-        {otherLists.map((list) => (
-          <ModifierSection
-            key={`${list.id}-${selectedVariation.name}`}
-            list={list}
-            selectedModifiers={selectedModifiers}
-            toggleModifier={toggleModifier}
-            selectedVariationName={selectedVariation.name}
-            itemDescription={item.description}
-          />
-        ))}
       </div>
 
       {/* Footer */}

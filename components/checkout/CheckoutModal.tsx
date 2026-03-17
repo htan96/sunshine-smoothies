@@ -5,6 +5,7 @@ import { useCartStore } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { Modal } from "@/components/ui/Modal";
 import LocationGate from "@/components/location/LocationGate";
+import { getFuelVariationDisplayName } from "@/lib/fuelConstants";
 
 const ORDER_START_HOUR = 8;
 const ORDER_END_HOUR = 18;
@@ -120,7 +121,7 @@ export default function CheckoutModal({
                       {item.itemName}
                     </p>
                     <p className="text-sm text-[var(--color-muted)]">
-                      {item.variationName}
+                      {getFuelVariationDisplayName(item.variationId) ?? item.variationName}
                       {item.modifiers?.length ? ` · +${item.modifiers.map((m) => m.name).join(", ")}` : ""}
                     </p>
                     <div className="flex items-center gap-2 mt-1">

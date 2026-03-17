@@ -4,7 +4,7 @@ import { useState } from "react";
 import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
 import { matchModifierToMenuItem } from "@/lib/matchModifierToItem";
-import { REDEEM_VARIATIONS } from "@/lib/fuelConstants";
+import { REDEEM_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
 import ModifierSection from "@/components/menu/ModifierSection";
 import ConsolidatedFruitVegSection from "@/components/menu/ConsolidatedFruitVegSection";
 import type { MenuItem, MenuModifierList } from "@/features/menu/types";
@@ -132,7 +132,7 @@ export default function RedeemSection({ item, drinkItems }: Props) {
       itemName: item.name,
       image: item.image ?? undefined,
       variationId: sizeVariation.id,
-      variationName: sizeVariation.name,
+      variationName: getFuelVariationDisplayName(sizeVariation.id) ?? sizeVariation.name,
       basePrice: sizeVariation.price,
       modifiers: modifierPayloads,
       quantity: 1,

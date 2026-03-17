@@ -7,7 +7,6 @@ type Props = {
   list: MenuModifierList;
   selectedModifiers: Record<string, string[]>;
   toggleModifier: (list: MenuModifierList, modifierId: string) => void;
-  selectedVariationName?: string;
   itemDescription?: string;
 };
 
@@ -27,7 +26,6 @@ export default function ModifierSection({
   list,
   selectedModifiers,
   toggleModifier,
-  selectedVariationName,
   itemDescription,
 }: Props) {
 
@@ -38,11 +36,6 @@ export default function ModifierSection({
   const normalizedListName = list.name?.toLowerCase() || "";
 
   const isComboList = normalizedListName.includes("combo");
-
-  const isLarge =
-    selectedVariationName?.toLowerCase().includes("large");
-
-  const disabledCombo = isComboList && !isLarge;
 
   const isExtraFruit =
     normalizedListName.includes("extra fruit");
@@ -60,6 +53,13 @@ export default function ModifierSection({
   const normalizedIngredients = descriptionIngredients.map(normalize);
 
   let filteredModifiers = list.modifiers;
+
+  // Hide "No Combo" option in combo lists
+  if (isComboList) {
+    filteredModifiers = filteredModifiers.filter(
+      (m) => !m.name.toLowerCase().includes("no combo")
+    );
+  }
 
   if (isExtraFruit || isExtraVeg) {
 
@@ -105,12 +105,6 @@ export default function ModifierSection({
         </span>
       </button>
 
-      {disabledCombo && (
-        <p className="text-xs text-neutral-500 mt-1">
-          Only available with Large smoothies
-        </p>
-      )}
-
       {open && (
         <div className="flex flex-wrap gap-2 mt-4">
 
@@ -122,18 +116,12 @@ export default function ModifierSection({
             return (
               <button
                 key={modifier.id}
-                disabled={disabledCombo}
                 onClick={() => toggleModifier(list, modifier.id)}
                 className={`px-4 py-2 rounded-full text-sm border transition
                 ${
                   selected
                     ? "bg-[var(--color-orange)] text-black border-[var(--color-orange)]"
-                    : "bg-white border-neutral-100"
-                }
-                ${
-                  disabledCombo
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:border-neutral-200"
+                    : "bg-white border-neutral-100 hover:border-neutral-200"
                 }`}
               >
                 {modifier.name}

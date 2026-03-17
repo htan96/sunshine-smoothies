@@ -2,7 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
-import { PACK_VARIATIONS } from "@/lib/fuelConstants";
+import { PACK_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
 import type { MenuItem, MenuVariation } from "@/features/menu/types";
 
 type Props = {
@@ -29,7 +29,7 @@ export default function BuyPacksSection({ items }: Props) {
       itemName: item.name,
       image: item.image ?? undefined,
       variationId: variation.id,
-      variationName: variation.name,
+      variationName: getFuelVariationDisplayName(variation.id) ?? variation.name,
       basePrice: variation.price,
       modifiers: [],
       quantity: 1,
@@ -52,7 +52,7 @@ export default function BuyPacksSection({ items }: Props) {
             key={variation.id}
             className="rounded-2xl border border-neutral-100 p-5 hover:border-[var(--color-orange)]/50 transition"
           >
-            <p className="font-semibold text-[var(--color-charcoal)]">{variation.name}</p>
+            <p className="font-semibold text-[var(--color-charcoal)]">{getFuelVariationDisplayName(variation.id) ?? variation.name}</p>
             <p className="text-lg font-bold text-[var(--color-orange)] mt-1">
               ${(variation.price / 100).toFixed(2)}
             </p>

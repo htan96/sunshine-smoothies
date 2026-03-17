@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCartStore, type CartItem } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
-import { PACK_VARIATIONS, REDEEM_VARIATIONS } from "@/lib/fuelConstants";
+import { PACK_VARIATIONS, REDEEM_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
 import LocationGate from "@/components/location/LocationGate";
 import MenuItemModal from "@/components/menu/MenuItemModal";
 import EmbeddedCheckout from "@/components/checkout/EmbeddedCheckout";
@@ -416,7 +416,10 @@ export default function CartDrawer() {
 
         {showEmbeddedCheckout && orderId && selectedLocation ? (
           <EmbeddedCheckout
-            items={items}
+            items={items.map((i) => ({
+              ...i,
+              variationName: getFuelVariationDisplayName(i.variationId) ?? i.variationName,
+            }))}
             total={orderTotal}
             subtotal={orderSubtotal}
             tax={orderTax}
@@ -616,7 +619,7 @@ export default function CartDrawer() {
               <p className="font-medium text-[var(--color-charcoal)]">{item.itemName}</p>
 
               <p className="text-sm text-[var(--color-muted)]">
-                {item.variationName}
+                {getFuelVariationDisplayName(item.variationId) ?? item.variationName}
               </p>
 
               {item.modifiers && item.modifiers.length > 0 && (
