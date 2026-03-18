@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 import { SquareClient } from "square";
 import { fetchCatalogItems } from "@/features/square/catalog";
 import { transformCatalog } from "@/features/menu/transform";
+import { isLocationClosed, getLocationClosureMessage } from "@/lib/locationClosures";
 
 /* -------------------------------- */
 /* Square Client                    */
@@ -96,6 +97,16 @@ export async function POST(req: Request) {
         { error: "Missing location ID" },
         { status: 400 }
       );
+    }
+
+    const pickupTimeForClosure = pickupTime
+      ? new Date(pickupTime)
+      : new Date();
+    if (isLocationClosed(locationId, pickupTimeForClosure)) {
+      const message =
+        getLocationClosureMessage(locationId, pickupTimeForClosure) ??
+        "This location is closed for the selected pickup time. Please choose another location or time.";
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
     /* -------------------------------- */
@@ -259,7 +270,7 @@ export async function POST(req: Request) {
               try {
                 await squareClient.customers.update({
                   customerId: existingId,
-                  customer: { emailAddress: emailTrimmed },
+                  emailAddress: emailTrimmed,
                 });
               } catch {
                 // Update failed - continue with existing customer

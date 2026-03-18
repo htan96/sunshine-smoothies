@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCartStore, type CartItem } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
+import { isLocationClosed, getLocationClosureMessage } from "@/lib/locationClosures";
 import LocationGate from "@/components/location/LocationGate";
 import MenuItemModal from "@/components/menu/MenuItemModal";
 import EmbeddedCheckout from "@/components/checkout/EmbeddedCheckout";
@@ -287,6 +288,16 @@ export default function CartDrawer() {
       return;
     }
 
+    const pickupTimeForCheck = new Date(pickupDate);
+    if (isLocationClosed(selectedLocation.id, pickupTimeForCheck)) {
+      setCheckoutError(
+        getLocationClosureMessage(selectedLocation.id, pickupTimeForCheck) ??
+          "This location is closed for the selected pickup time. Please choose another location or time."
+      );
+      setShowLocationGate(true);
+      return;
+    }
+
     if (!canOrder) {
       setCheckoutError("Online ordering is available between 8AM and 6PM.");
       return;
@@ -444,6 +455,11 @@ export default function CartDrawer() {
                 <p className="text-sm text-[var(--color-muted)]">
                   {selectedLocation.address}
                 </p>
+                {selectedLocation && isLocationClosed(selectedLocation.id, pickupDate) && (
+                  <p className="mt-2 text-sm text-amber-600 font-medium">
+                    Closed for selected pickup time. Choose another time or location.
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={() => setShowLocationGate(true)}
@@ -695,37 +711,53 @@ export default function CartDrawer() {
             <span>${(getCartTotal() / 100).toFixed(2)}</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleCheckout}
-            disabled={
-              !canOrder ||
-              !email.trim() ||
-              !isValidEmail(email) ||
-              (phoneRequired && (!phone.trim() || !isValidUSPhone(phone))) ||
-              checkingFuel
-            }
-            className={`w-full py-4 rounded-full font-semibold transition ${
-              canOrder && email.trim() && isValidEmail(email) && (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) && selectedLocation && !checkingFuel
-                ? "bg-[var(--color-orange)] text-black hover:opacity-90"
-                : "bg-neutral-200 text-[var(--color-muted)] cursor-not-allowed"
-            }`}
-          >
-            {!selectedLocation
-              ? "Select Location"
-              : !canOrder
-              ? "Ordering Closed"
-              : !email.trim()
-              ? "Enter Email for Receipt"
-              : !isValidEmail(email)
-              ? "Enter Valid Email"
-              : phoneRequired && !phone.trim()
-              ? "Enter Phone Number"
-              : phoneRequired && !isValidUSPhone(phone)
-              ? "Enter Valid Phone"
-              : checkingFuel
-              ? "Checking Balance..."
-              : "Checkout"}
+          {(() => {
+            const locationClosedForPickup =
+              selectedLocation && isLocationClosed(selectedLocation.id, pickupDate);
+            return (
+              <button
+                type="button"
+                onClick={handleCheckout}
+                disabled={
+                  !canOrder ||
+                  !email.trim() ||
+                  !isValidEmail(email) ||
+                  (phoneRequired && (!phone.trim() || !isValidUSPhone(phone))) ||
+                  checkingFuel ||
+                  !!locationClosedForPickup
+                }
+                className={`w-full py-4 rounded-full font-semibold transition ${
+                  canOrder &&
+                  email.trim() &&
+                  isValidEmail(email) &&
+                  (!phoneRequired || (phone.trim() && isValidUSPhone(phone))) &&
+                  selectedLocation &&
+                  !checkingFuel &&
+                  !locationClosedForPickup
+                    ? "bg-[var(--color-orange)] text-black hover:opacity-90"
+                    : "bg-neutral-200 text-[var(--color-muted)] cursor-not-allowed"
+                }`}
+              >
+                {!selectedLocation
+                  ? "Select Location"
+                  : !canOrder
+                  ? "Ordering Closed"
+                  : locationClosedForPickup
+                  ? "Location Closed — Change Time/Location"
+                  : !email.trim()
+                  ? "Enter Email for Receipt"
+                  : !isValidEmail(email)
+                  ? "Enter Valid Email"
+                  : phoneRequired && !phone.trim()
+                  ? "Enter Phone Number"
+                  : phoneRequired && !isValidUSPhone(phone)
+                  ? "Enter Valid Phone"
+                  : checkingFuel
+                  ? "Checking Balance..."
+                  : "Checkout"}
+              </button>
+            );
+          })()}
           </button>
 
         </div>

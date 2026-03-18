@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocationStore } from "@/features/location/store";
+import { isLocationClosed } from "@/lib/locationClosures";
 
 interface LocationGateProps {
   onClose?: () => void;
@@ -36,8 +37,11 @@ export default function LocationGate({ onClose }: LocationGateProps) {
     }
   }, [selectedLocation]);
 
+  const getLocationEnabled = (loc: (typeof LOCATIONS)[0]) =>
+    loc.enabled && !isLocationClosed(loc.id);
+
   const selected = LOCATIONS.find(
-    (l) => l.id === selectedId && l.enabled
+    (l) => l.id === selectedId && getLocationEnabled(l)
   );
 
   const handleContinue = () => {
@@ -63,30 +67,38 @@ export default function LocationGate({ onClose }: LocationGateProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {LOCATIONS.map((loc) => (
-            <button
-              key={loc.id}
-              type="button"
-              disabled={!loc.enabled}
-              onClick={() => setSelectedId(loc.id)}
-              className={`w-full border rounded-xl p-4 text-left transition ${
-                selectedId === loc.id
-                  ? "border-[var(--color-orange)] bg-[var(--color-orange-light)]/50"
-                  : "border-neutral-200 hover:border-[var(--color-orange)]/50"
-              } ${
-                !loc.enabled
-                  ? "opacity-40 cursor-not-allowed"
-                  : ""
-              }`}
-            >
-              <p className="font-semibold text-lg text-[var(--color-charcoal)]">
-                {loc.name}
-              </p>
-              <p className="text-sm text-[var(--color-muted)]">
-                {loc.address}
-              </p>
-            </button>
-          ))}
+          {LOCATIONS.map((loc) => {
+            const enabled = getLocationEnabled(loc);
+            return (
+              <button
+                key={loc.id}
+                type="button"
+                disabled={!enabled}
+                onClick={() => enabled && setSelectedId(loc.id)}
+                className={`w-full border rounded-xl p-4 text-left transition ${
+                  selectedId === loc.id
+                    ? "border-[var(--color-orange)] bg-[var(--color-orange-light)]/50"
+                    : "border-neutral-200 hover:border-[var(--color-orange)]/50"
+                } ${
+                  !enabled
+                    ? "opacity-40 cursor-not-allowed"
+                    : ""
+                }`}
+              >
+                <p className="font-semibold text-lg text-[var(--color-charcoal)]">
+                  {loc.name}
+                </p>
+                <p className="text-sm text-[var(--color-muted)]">
+                  {loc.address}
+                </p>
+                {!enabled && isLocationClosed(loc.id) && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Closed today after 3 PM
+                  </p>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div className="p-6 border-t">
