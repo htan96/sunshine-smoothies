@@ -251,13 +251,14 @@ export async function POST(req: Request) {
           });
 
           const existing = search.customers?.[0];
+          const existingId = existing?.id;
 
-          if (existing) {
-            customerId = existing.id;
+          if (existingId) {
+            customerId = existingId;
             if (emailTrimmed && !existing.emailAddress) {
               try {
                 await squareClient.customers.update({
-                  customerId: existing.id,
+                  customerId: existingId,
                   customer: { emailAddress: emailTrimmed },
                 });
               } catch {
