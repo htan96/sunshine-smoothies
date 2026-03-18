@@ -212,7 +212,6 @@ export default function MenuItemDetail({ item }: Props) {
                       list={list}
                       selectedModifiers={selectedModifiers}
                       toggleModifier={toggleModifier}
-                      selectedVariationName={selectedVariation.name}
                       itemDescription={item.description}
                     />
                   ))}

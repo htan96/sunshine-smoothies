@@ -296,7 +296,6 @@ export default function RedeemSection({ item, drinkItems }: Props) {
               list={list}
               selectedModifiers={selectedModifiers}
               toggleModifier={toggleModifier}
-              selectedVariationName={sizeVariation?.name}
               itemDescription={selectedDrinkDescription}
             />
           ))}
