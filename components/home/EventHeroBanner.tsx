@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/Badge";
  * Update dates/events as needed. Remove when no featured event.
  */
 const YEAR_LINEUP = [
-  { label: "7/7", month: "July", sub: "Lucky 7s" },
-  { label: "11 years", month: "August", sub: "Anniversary" },
-  { label: "Giveaway", month: "December", sub: "Christmas" },
+  { label: "7/7 Lucky 7s", month: "July" },
+  { label: "11 Year Anniversary", month: "August" },
+  { label: "Christmas Giveaway", month: "December" },
 ];
 
 export function EventHeroBanner() {

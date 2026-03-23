@@ -59,15 +59,15 @@ function BestSellersFallback() {
 export default function HomePage() {
   return (
     <>
-      <HeroSection />
       <EventHeroBanner />
-      <EventsPreview />
+      <HeroSection />
       <CategoryGrid />
       <Suspense fallback={<BestSellersFallback />}>
         <BestSellersSection />
       </Suspense>
       <FuelPackBanner />
       <HomeGallery />
+      <EventsPreview />
       <LocationsSection />
       <SocialSection />
     </>

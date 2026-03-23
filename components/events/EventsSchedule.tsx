@@ -9,8 +9,8 @@ const EVENTS = [
   {
     date: "July 7",
     year: "2026",
-    name: "7/7",
-    tagline: "Lucky 7s · 7th day of the 7th month.",
+    name: "7/7 Lucky 7s",
+    tagline: "7th day of the 7th month.",
     featured: false,
   },
   {

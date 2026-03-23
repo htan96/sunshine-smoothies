@@ -1,5 +1,5 @@
 import { SquareClient } from "square";
-import { fetchFullCatalog } from "@/features/square/catalog";
+import { fetchCatalogItems, fetchFullCatalog } from "@/features/square/catalog";
 import { loadMenu } from "@/features/menu/loadMenu";
 import { transformCatalog } from "@/features/menu/transform";
 
@@ -49,7 +49,7 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
       token: process.env.SQUARE_ACCESS_TOKEN,
     });
 
-    const [allOrders, rawCatalog] = await Promise.all([
+    const [allOrders, rawCatalogForMap, catalogForMenu] = await Promise.all([
       (async () => {
         const orders: any[] = [];
         let cursor: string | undefined = undefined;
@@ -77,9 +77,15 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
         return orders;
       })(),
       getCatalogForVariationMap(),
+      fetchCatalogItems(),
     ]);
 
-    const { items } = transformCatalog(rawCatalog, locationId);
+    const variationToItemId = buildVariationToItemFromRawCatalog(rawCatalogForMap);
+    const { items } = transformCatalog(catalogForMenu as any[], locationId);
+
+    if (items.length === 0) {
+      return getFallbackItems();
+    }
 
     const variationCounts: Record<string, number> = {};
     for (const order of allOrders) {
@@ -91,8 +97,6 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
         }
       }
     }
-
-    const variationToItemId = buildVariationToItemFromRawCatalog(rawCatalog);
 
     // Debug: uncomment to see in terminal when loading home page
     // console.log("[BestSellers] orders:", allOrders.length, "variations in orders:", Object.keys(variationCounts).length, "variation->item map:", variationToItemId.size);
@@ -118,7 +122,10 @@ export async function getBestSellersItems(): Promise<BestSellerItem[]> {
     if (top.length > 0) return top;
 
     const featured = items
-      .filter((i) => i.categoryName?.toLowerCase().includes("smoothie"))
+      .filter((i) => {
+        const cat = (i.categoryName ?? "").toLowerCase();
+        return cat.includes("smoothie") || cat.includes("juice") || cat.includes("drink");
+      })
       .slice(0, 6);
     const toUse = featured.length >= 3 ? featured : items.slice(0, 6);
     return toUse.map((i) => ({
@@ -141,7 +148,10 @@ async function getFallbackItems(): Promise<BestSellerItem[]> {
 
     const items = await loadMenu(locationId);
     const featured = items
-      .filter((i) => i.categoryName?.toLowerCase().includes("smoothie"))
+      .filter((i) => {
+        const cat = (i.categoryName ?? "").toLowerCase();
+        return cat.includes("smoothie") || cat.includes("juice") || cat.includes("drink");
+      })
       .slice(0, 6);
     const toUse = featured.length >= 3 ? featured : items.slice(0, 6);
     return toUse.map((i) => ({
