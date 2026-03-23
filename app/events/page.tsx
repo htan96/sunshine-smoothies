@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
 import EventsIntro from "@/components/events/EventsIntro";
+import EventsSchedule from "@/components/events/EventsSchedule";
 import EventsHero from "@/components/events/EventsHero";
 import EventsStory from "@/components/events/EventsStory";
 import EventsWhy from "@/components/events/EventsWhy";
@@ -19,6 +20,7 @@ export default function EventsPage() {
   return (
     <main className="bg-white">
       <EventsIntro />
+      <EventsSchedule />
       <EventsHero />
       <EventsStory />
       <EventsWhy />
