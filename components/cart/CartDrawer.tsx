@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useCartStore, type CartItem } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
 import { PACK_VARIATIONS, REDEEM_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 import { isLocationClosed, getLocationClosureMessage } from "@/lib/locationClosures";
 import LocationGate from "@/components/location/LocationGate";
 import MenuItemModal from "@/components/menu/MenuItemModal";
@@ -706,9 +707,14 @@ export default function CartDrawer() {
             </p>
           )}
 
-          <div className="flex justify-between text-lg font-semibold mb-4 text-[var(--color-charcoal)]">
-            <span>Total</span>
-            <span>${(getCartTotal() / 100).toFixed(2)}</span>
+          <div className="pt-2 border-t border-neutral-100 mb-4">
+            <div className="flex justify-between text-lg font-bold text-[var(--color-charcoal)]">
+              <span>Total</span>
+              <span className="tabular-nums">${(calculateTotalWithTaxCents(getCartTotal()) / 100).toFixed(2)}</span>
+            </div>
+            <p className="text-xs text-[var(--color-muted)] mt-1">
+              Tax included · Final price shown
+            </p>
           </div>
 
           {(() => {

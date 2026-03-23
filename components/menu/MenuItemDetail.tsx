@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
 import ModifierSection from "./ModifierSection";
 import ConsolidatedFruitVegSection from "./ConsolidatedFruitVegSection";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 
 import type {
   MenuItem,
@@ -176,7 +177,7 @@ export default function MenuItemDetail({ item }: Props) {
                     }`}
                   >
                     <span>{variation.name}</span>
-                    <span>${(variation.price / 100).toFixed(2)}</span>
+                    <span>${(calculateTotalWithTaxCents(variation.price) / 100).toFixed(2)}</span>
                   </button>
                 ))}
               </div>
@@ -245,7 +246,8 @@ export default function MenuItemDetail({ item }: Props) {
           </div>
 
           <div className="text-lg font-semibold">
-            Total: ${(totalPrice / 100).toFixed(2)}
+            Total: ${(calculateTotalWithTaxCents(totalPrice) / 100).toFixed(2)}
+            <span className="text-xs font-normal text-neutral-500 block">Tax included</span>
           </div>
 
           <button

@@ -146,20 +146,25 @@ export default function EmbeddedCheckout({
         </div>
 
         <div className="space-y-1 pt-2 border-t border-neutral-100">
-          <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
-            <span>Subtotal</span>
-            <span>${(subtotal / 100).toFixed(2)}</span>
-          </div>
-          {tax > 0 && (
-            <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
-              <span>Tax</span>
-              <span>${(tax / 100).toFixed(2)}</span>
-            </div>
-          )}
-          <div className="flex justify-between font-semibold text-[var(--color-charcoal)] pt-1">
+          {tax > 0 ? (
+            <>
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
+                <span>Subtotal</span>
+                <span className="tabular-nums">${(subtotal / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-[var(--color-charcoal)]">
+                <span>Tax{subtotal > 0 ? ` (${Math.round((tax / subtotal) * 100)}%)` : ""}</span>
+                <span className="tabular-nums">${(tax / 100).toFixed(2)}</span>
+              </div>
+            </>
+          ) : null}
+          <div className="flex justify-between font-bold text-[var(--color-charcoal)] pt-2">
             <span>Total</span>
-            <span>${(total / 100).toFixed(2)}</span>
+            <span className="tabular-nums">${(total / 100).toFixed(2)}</span>
           </div>
+          <p className="text-xs text-[var(--color-muted)] pt-0.5">
+            Tax included · Matches cart total
+          </p>
         </div>
 
         {/* Tip options */}

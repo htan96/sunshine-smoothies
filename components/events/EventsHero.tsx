@@ -21,7 +21,7 @@ export default function EventsHero() {
         <div className="grid grid-cols-2 gap-4">
           <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-lg">
             <Image
-              src="/events/newspaper.jpeg"
+              src="/events/newspaper.png"
               alt="Newspaper coverage of Free Smoothie Day"
               fill
               className="object-cover"

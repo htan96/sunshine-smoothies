@@ -3,6 +3,7 @@
 import { nanoid } from "nanoid";
 import { useCartStore } from "@/features/cart/store";
 import { PACK_VARIATIONS, getFuelVariationDisplayName } from "@/lib/fuelConstants";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 import type { MenuItem, MenuVariation } from "@/features/menu/types";
 
 type Props = {
@@ -54,7 +55,10 @@ export default function BuyPacksSection({ items }: Props) {
           >
             <p className="font-semibold text-[var(--color-charcoal)]">{getFuelVariationDisplayName(variation.id) ?? variation.name}</p>
             <p className="text-lg font-bold text-[var(--color-orange)] mt-1">
-              ${(variation.price / 100).toFixed(2)}
+              ${(calculateTotalWithTaxCents(variation.price) / 100).toFixed(2)}
+            </p>
+            <p className="text-xs text-[var(--color-muted)] mt-0.5">
+              Tax included
             </p>
             <p className="text-xs text-[var(--color-muted)] mt-1">
               7 drinks → 10 total

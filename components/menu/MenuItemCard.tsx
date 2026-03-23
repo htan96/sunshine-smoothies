@@ -1,6 +1,7 @@
 "use client";
 
 import type { MenuItem } from "@/features/menu/types";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 
 type Props = {
   item: MenuItem;
@@ -8,10 +9,11 @@ type Props = {
 };
 
 export default function MenuItemCard({ item, onClick }: Props) {
-  const minPrice = item.variations.reduce(
+  const minPriceBase = item.variations.reduce(
     (min, v) => Math.min(min, v.price),
     item.variations[0]?.price ?? 0
   );
+  const minPrice = calculateTotalWithTaxCents(minPriceBase);
   const singleSize = item.variations.length === 1;
 
   return (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCartStore } from "@/features/cart/store";
 import { useLocationStore } from "@/features/location/store";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 import { Modal } from "@/components/ui/Modal";
 import LocationGate from "@/components/location/LocationGate";
 import { getFuelVariationDisplayName } from "@/lib/fuelConstants";
@@ -110,7 +111,8 @@ export default function CheckoutModal({
                 (sum, m) => sum + m.price * m.quantity,
                 0
               );
-              const itemTotal = (item.basePrice + modifierTotal) * item.quantity;
+              const itemTotalBase = (item.basePrice + modifierTotal) * item.quantity;
+              const itemTotalDisplay = calculateTotalWithTaxCents(itemTotalBase);
               return (
                 <div
                   key={item.id}
@@ -150,7 +152,7 @@ export default function CheckoutModal({
                     </div>
                   </div>
                   <span className="font-semibold text-[var(--color-charcoal)] shrink-0">
-                    ${(itemTotal / 100).toFixed(2)}
+                    ${(itemTotalDisplay / 100).toFixed(2)}
                   </span>
                 </div>
               );
@@ -212,10 +214,13 @@ export default function CheckoutModal({
         {/* Total */}
         <div className="flex justify-between items-center py-4 border-t border-neutral-100">
           <span className="text-lg font-semibold text-[var(--color-charcoal)]">Total</span>
-          <span className="text-xl font-bold text-[var(--color-charcoal)]">
-            ${(getCartTotal() / 100).toFixed(2)}
+          <span className="text-xl font-bold text-[var(--color-charcoal)] tabular-nums">
+            ${(calculateTotalWithTaxCents(getCartTotal()) / 100).toFixed(2)}
           </span>
         </div>
+        <p className="text-xs text-[var(--color-muted)] -mt-2">
+          Tax included · Final price shown
+        </p>
         </>
         )}
       </div>

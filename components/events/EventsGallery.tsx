@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 const GALLERY_IMAGES = [
-  { src: "/events/newspaper.jpeg", alt: "Newspaper coverage of Free Smoothie Day" },
+  { src: "/events/newspaper.png", alt: "Newspaper coverage of Free Smoothie Day" },
   { src: "/events/larussels.jpeg", alt: "Larussel and community at Free Smoothie Day" },
 ];
 

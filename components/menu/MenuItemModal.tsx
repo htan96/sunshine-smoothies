@@ -6,6 +6,7 @@ import { useCartStore, type CartItem } from "@/features/cart/store";
 import ModifierSection from "./ModifierSection";
 import ConsolidatedFruitVegSection from "./ConsolidatedFruitVegSection";
 import FuelPackDrinksSection from "./FuelPackDrinksSection";
+import { calculateTotalWithTaxCents } from "@/lib/pricing";
 import { Modal } from "@/components/ui/Modal";
 import { Drawer } from "@/components/ui/Drawer";
 
@@ -260,6 +261,12 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
           <p className="text-sm text-[var(--color-muted)]">{item.description}</p>
         )}
 
+        {item.variations.length <= 1 && (
+          <p className="text-xs text-[var(--color-muted)] mt-1">
+            Tax included
+          </p>
+        )}
+
         {/* Size - only show when more than one option */}
         {item.variations.length > 1 && (
           <div>
@@ -277,10 +284,13 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
                   }`}
                 >
                   <span>{v.name}</span>
-                  <span>${(v.price / 100).toFixed(2)}</span>
+                  <span>${(calculateTotalWithTaxCents(v.price) / 100).toFixed(2)}</span>
                 </button>
               ))}
             </div>
+            <p className="text-xs text-[var(--color-muted)] mt-2">
+              Tax included
+            </p>
           </div>
         )}
 
@@ -345,7 +355,8 @@ export default function MenuItemModal({ item, isOpen, onClose, existingCartItem,
           onClick={handleAddToCart}
           className="flex-1 py-3 px-6 rounded-full bg-[var(--color-orange)] text-black font-semibold hover:opacity-90 transition"
         >
-          {isEditMode ? "Save changes" : "Add to Order"} — ${(totalPrice / 100).toFixed(2)}
+          {isEditMode ? "Save changes" : "Add to Order"} — $
+          {(calculateTotalWithTaxCents(totalPrice) / 100).toFixed(2)}
         </button>
       </div>
     </div>
