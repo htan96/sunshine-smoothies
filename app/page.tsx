@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SITE_URL } from "@/lib/site";
 import { HeroSection } from "@/components/home/HeroSection";
+import { EventHeroBanner } from "@/components/home/EventHeroBanner";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { BestSellers } from "@/components/home/BestSellers";
 import { FuelPackBanner } from "@/components/home/FuelPackBanner";
+import { HomeGallery } from "@/components/home/HomeGallery";
 import { EventsPreview } from "@/components/home/EventsPreview";
 import { LocationsSection } from "@/components/home/LocationsSection";
 import SocialSection from "@/components/home/SocialSection";
@@ -58,11 +60,13 @@ export default function HomePage() {
   return (
     <>
       <HeroSection />
+      <EventHeroBanner />
       <CategoryGrid />
       <Suspense fallback={<BestSellersFallback />}>
         <BestSellersSection />
       </Suspense>
       <FuelPackBanner />
+      <HomeGallery />
       <EventsPreview />
       <LocationsSection />
       <SocialSection />
