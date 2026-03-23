@@ -61,13 +61,13 @@ export default function HomePage() {
     <>
       <HeroSection />
       <EventHeroBanner />
+      <EventsPreview />
       <CategoryGrid />
       <Suspense fallback={<BestSellersFallback />}>
         <BestSellersSection />
       </Suspense>
       <FuelPackBanner />
       <HomeGallery />
-      <EventsPreview />
       <LocationsSection />
       <SocialSection />
     </>
